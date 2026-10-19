@@ -1,0 +1,52 @@
+name: test-collect
+
+# Bu dosya sadece "hotel-test" dalına push edilince çalışır, main'e dokunmaz.
+# Veri repoya YAZILMAZ; sonuçlar "Artifacts" olarak indirilir.
+on:
+  push:
+    branches: [hotel-test]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: hotels
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Can this runner reach Trivago at all?
+        run: |
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" -A "Mozilla/5.0" https://www.trivago.com.tr/ || true
+
+      - name: Registry check
+        run: python collect_hotels.py check | tail -5
+
+      - name: Collect two nights (1 and 2 adults each)
+        run: |
+          D1=$(TZ=Europe/Istanbul date -d "+5 days" +%F)
+          D2=$(TZ=Europe/Istanbul date -d "+6 days" +%F)
+          python collect_hotels.py collect --region antalya --kind night --date "$D1"
+          python collect_hotels.py collect --region antalya --kind night --date "$D2"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            hotels/data/hotel_prices.csv
+            hotels/data/hotel_queries.csv
+            hotels/data/debug/
+          if-no-files-found: ignore

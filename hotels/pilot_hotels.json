@@ -1,0 +1,123 @@
+{
+    "schema_version": "1.1",
+    "source": "trivago",
+    "base_url": "https://www.trivago.com.tr/",
+    "currency": "TRY",
+    "search_adults": 2,
+    "search_children": 0,
+    "search_rooms": 1,
+    "guest_scenarios": [
+        {"adults": 1, "rooms": 1},
+        {"adults": 2, "rooms": 1}
+    ],
+    "window_start_offset": 1,
+    "window_days": 30,
+    "validation_nights": [
+        3,
+        7,
+        14
+    ],
+    "validation_anchor": "2026-10-22",
+    "validation_every_days": 7,
+    "validation_count": 3,
+    "minimum_seconds_between_searches": 30,
+    "max_scroll_rounds": 12,
+    "max_result_pages": 8,
+    "discovery": {
+        "comment": "discover searches these probe stays; a hotel must show a verified price in >= min_coverage of them (and for 1 night) to be selectable. Override per region with a 'discovery' block inside the region.",
+        "probe_nights": [
+            1,
+            3,
+            7
+        ],
+        "probe_check_in_offsets": [
+            3,
+            12,
+            21
+        ],
+        "min_coverage": 0.75,
+        "require_one_night": true,
+        "max_pages": 10
+    },
+    "selection": {
+        "comment": "Chosen by code ONCE (discover) and frozen in data/hotel_registry.json. Per segment: primaries_per_segment hotels + backups_per_segment similar backups, all tracked daily. Override per region with a 'selection' block inside the region.",
+        "min_rating": 7.5,
+        "min_reviews": 100,
+        "min_stars": 3,
+        "primaries_per_segment": 2,
+        "backups_per_segment": 2,
+        "segments": [
+            "low",
+            "mid",
+            "high"
+        ]
+    },
+    "regions": [
+        {
+            "region_id": "antalya",
+            "search_text": "Kemer, Antalya",
+            "area_name": "Kemer",
+            "airport_code": "AYT",
+            "airport_distance_km": 55,
+            "note": "chosen by the user: Kemer (the flight contract says Kaleiçi-Konyaaltı). airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "izmir_cesme",
+            "search_text": "Çeşme, İzmir",
+            "area_name": "Çeşme",
+            "airport_code": "ADB",
+            "airport_distance_km": 80,
+            "note": "contract: Çeşme-Alaçatı. airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "mugla_bodrum",
+            "search_text": "Bodrum",
+            "area_name": "Bodrum",
+            "airport_code": "BJV",
+            "airport_distance_km": 35,
+            "note": "airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "mugla_fethiye",
+            "search_text": "Fethiye",
+            "area_name": "Fethiye",
+            "airport_code": "DLM",
+            "airport_distance_km": 50,
+            "note": "contract: Fethiye-Ölüdeniz. airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "trabzon",
+            "search_text": "Trabzon",
+            "area_name": "Trabzon",
+            "airport_code": "TZX",
+            "airport_distance_km": 6,
+            "note": "contract: centre-Maçka. airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "nevsehir",
+            "search_text": "Göreme, Nevşehir",
+            "area_name": "Göreme",
+            "airport_code": "NAV",
+            "airport_distance_km": 35,
+            "selection": {"min_stars": 0},
+            "note": "contract: Göreme-Uçhisar-Ürgüp. Cave/boutique hotels often have no star class, so min_stars is off. airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "gaziantep",
+            "search_text": "Gaziantep",
+            "area_name": "Gaziantep",
+            "airport_code": "GZT",
+            "airport_distance_km": 20,
+            "selection": {"min_stars": 0},
+            "note": "contract: centre. Konak hotels often have no star class, so min_stars is off. airport_distance_km: approximate, verify on Google Maps"
+        },
+        {
+            "region_id": "erzurum",
+            "search_text": "Palandöken, Erzurum",
+            "area_name": "Palandöken",
+            "airport_code": "ERZ",
+            "airport_distance_km": 15,
+            "note": "contract: Palandöken. airport_distance_km: approximate, verify on Google Maps"
+        }
+    ]
+}

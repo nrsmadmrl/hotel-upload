@@ -1,0 +1,284 @@
+{
+  "antalya": {
+    "created": "2026-10-18",
+    "search_text": "Kemer, Antalya",
+    "probes": [
+      {
+        "check_in_date": "2026-10-22",
+        "check_out_date": "2026-10-23",
+        "nights": 1,
+        "kind": "probe",
+        "pages_read": 4
+      },
+      {
+        "check_in_date": "2026-10-22",
+        "check_out_date": "2026-10-25",
+        "nights": 3,
+        "kind": "probe",
+        "pages_read": 7
+      },
+      {
+        "check_in_date": "2026-10-22",
+        "check_out_date": "2026-10-29",
+        "nights": 7,
+        "kind": "probe",
+        "pages_read": 7
+      },
+      {
+        "check_in_date": "2026-10-31",
+        "check_out_date": "2026-11-01",
+        "nights": 1,
+        "kind": "probe",
+        "pages_read": 4
+      },
+      {
+        "check_in_date": "2026-10-31",
+        "check_out_date": "2026-11-03",
+        "nights": 3,
+        "kind": "probe",
+        "pages_read": 5
+      },
+      {
+        "check_in_date": "2026-10-31",
+        "check_out_date": "2026-11-07",
+        "nights": 7,
+        "kind": "probe",
+        "pages_read": 5
+      },
+      {
+        "check_in_date": "2026-11-09",
+        "check_out_date": "2026-11-10",
+        "nights": 1,
+        "kind": "probe",
+        "pages_read": 3
+      },
+      {
+        "check_in_date": "2026-11-09",
+        "check_out_date": "2026-11-12",
+        "nights": 3,
+        "kind": "probe",
+        "pages_read": 4
+      },
+      {
+        "check_in_date": "2026-11-09",
+        "check_out_date": "2026-11-16",
+        "nights": 7,
+        "kind": "probe",
+        "pages_read": 4
+      }
+    ],
+    "settings": {
+      "selection": {
+        "min_rating": 7.5,
+        "min_reviews": 100,
+        "min_stars": 3,
+        "primaries_per_segment": 2,
+        "backups_per_segment": 2,
+        "segments": [
+          "low",
+          "mid",
+          "high"
+        ],
+        "comment": "Chosen by code ONCE (discover) and frozen in data/hotel_registry.json. Per segment: primaries_per_segment hotels + backups_per_segment similar backups, all tracked daily. Override per region with a 'selection' block inside the region."
+      },
+      "discovery": {
+        "probe_nights": [
+          1,
+          3,
+          7
+        ],
+        "probe_check_in_offsets": [
+          3,
+          12,
+          21
+        ],
+        "min_coverage": 0.75,
+        "require_one_night": true,
+        "max_pages": 10,
+        "comment": "discover searches these probe stays; a hotel must show a verified price in >= min_coverage of them (and for 1 night) to be selectable. Override per region with a 'discovery' block inside the region."
+      }
+    },
+    "hotels": [
+      {
+        "hotel_id": "9f16678f3ecd23a2",
+        "hotel_name": "Garden Prizma Rooms&Aparts",
+        "segment": "low",
+        "stars": 3,
+        "rating": 8.0,
+        "review_count": 455,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 1,
+        "backup_for": null,
+        "nightly_median": 1935.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "70fa190434691158",
+        "hotel_name": "Belcan Hotel",
+        "segment": "low",
+        "stars": 3,
+        "rating": 8.3,
+        "review_count": 391,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 2,
+        "backup_for": null,
+        "nightly_median": 1981.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "fe04bc960e708f84",
+        "hotel_name": "Vois Kemer Hotel",
+        "segment": "low",
+        "stars": 3,
+        "rating": 8.0,
+        "review_count": 520,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 3,
+        "backup_for": "9f16678f3ecd23a2",
+        "nightly_median": 2100.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "d37d2ff583970824",
+        "hotel_name": "Elijah Hotel",
+        "segment": "low",
+        "stars": 3,
+        "rating": 8.7,
+        "review_count": 556,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 4,
+        "backup_for": "70fa190434691158",
+        "nightly_median": 2100.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "2804aa7d40255297",
+        "hotel_name": "Kamkat Otel",
+        "segment": "mid",
+        "stars": 5,
+        "rating": 8.4,
+        "review_count": 160,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 1,
+        "backup_for": null,
+        "nightly_median": 2389.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "77e829463eb79b8b",
+        "hotel_name": "Gizli Koy Hotel",
+        "segment": "mid",
+        "stars": 4,
+        "rating": 7.6,
+        "review_count": 690,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 2,
+        "backup_for": null,
+        "nightly_median": 2400.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "56056c368b72494f",
+        "hotel_name": "Avlu Hotel",
+        "segment": "mid",
+        "stars": 3,
+        "rating": 8.3,
+        "review_count": 189,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 3,
+        "backup_for": "2804aa7d40255297",
+        "nightly_median": 2338.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "d4b9610538af03e5",
+        "hotel_name": "Kemer Star Hotel",
+        "segment": "mid",
+        "stars": 3,
+        "rating": 8.0,
+        "review_count": 347,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 4,
+        "backup_for": "77e829463eb79b8b",
+        "nightly_median": 2348.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "6a2b02014c9f8668",
+        "hotel_name": "Le Marden Hotel Spa",
+        "segment": "high",
+        "stars": 4,
+        "rating": 8.6,
+        "review_count": 315,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 1,
+        "backup_for": null,
+        "nightly_median": 4219.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "c83c67bf5b756bed",
+        "hotel_name": "Dg Hotels Rose Resort",
+        "segment": "high",
+        "stars": 4,
+        "rating": 9.0,
+        "review_count": 2300,
+        "airport_distance_km": null,
+        "role": "primary",
+        "rank": 2,
+        "backup_for": null,
+        "nightly_median": 5246.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "2e6a9b5e317b5658",
+        "hotel_name": "Amore Hotel Teki̇rova",
+        "segment": "high",
+        "stars": 3,
+        "rating": 8.5,
+        "review_count": 631,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 3,
+        "backup_for": "6a2b02014c9f8668",
+        "nightly_median": 4152.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      },
+      {
+        "hotel_id": "3fd274399755e9d8",
+        "hotel_name": "Tu Casa Gelidonya Hotel",
+        "segment": "high",
+        "stars": 4,
+        "rating": 7.5,
+        "review_count": 2000,
+        "airport_distance_km": null,
+        "role": "backup",
+        "rank": 4,
+        "backup_for": "c83c67bf5b756bed",
+        "nightly_median": 5821.0,
+        "coverage": 1.0,
+        "min_nights_priced": 1
+      }
+    ]
+  }
+}
