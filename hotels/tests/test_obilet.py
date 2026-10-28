@@ -310,5 +310,29 @@ class CycleTests(unittest.TestCase):
                     sys.modules.pop("playwright.sync_api", None)
 
 
+class ExcelExportTests(unittest.TestCase):
+    def test_one_sheet_joins_prices_and_hotel_facts_in_try(self):
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            self.skipTest("openpyxl not installed")
+        import export_excel
+        rows, facts, _, _ = obilet.parse_response(FIXTURE, REGION, STAY, 1, DAY, "2026-10-28T12:00:00+03:00")
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "2026-10-27" / "test_kemer"
+            cfg = dict(horizon_days=30, adults=[2], validation={}, rooms=1)
+            obilet.save_region(folder, cfg, REGION, date(2026, 10, 27), DAY, rows, facts, [], dict(stopped=False))
+            out = Path(tmp) / "x.xlsx"
+            export_excel.main(["--data", tmp, "--out", str(out)])
+            ws = load_workbook(out, read_only=True)["Fiyatlar"]
+            data = list(ws.iter_rows(values_only=True))
+            head = data[0]
+            lancora = next(r for r in data[1:] if r[head.index("Otel")] == "Lancora Beach Hotel")
+            self.assertEqual(lancora[head.index("Toplam fiyat (TL)")], 6055)
+            self.assertEqual(lancora[head.index("Pansiyon")], "Her Şey Dahil")
+            self.assertEqual(lancora[head.index("Havuz")], "Evet")
+            self.assertEqual(lancora[head.index("Yıldız")], 4)
+
+
 if __name__ == "__main__":
     unittest.main()

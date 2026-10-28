@@ -61,6 +61,14 @@ python segments.py --run out/2026-10-30 --region antalya --check-in 2026-11-14 -
 python -m unittest discover -s tests -v
 ```
 
+Excel for analysis (one sheet with every price and the hotel's facts, prices in TRY,
+Turkish column names and a sheet explaining every column):
+
+```
+python export_excel.py --data ../../hotel-data/obilet            # newest cycle
+python export_excel.py --data ../../hotel-data/obilet --cycle 2026-10-30
+```
+
 New location ids: `python obilet_locate.py "Place name"` (or the **obilet-locate** workflow).
 
 ## Older code
