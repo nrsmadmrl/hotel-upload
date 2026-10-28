@@ -1,12 +1,8 @@
 name: obilet-locate
 
-# Finds obilet hotel-search location ids for the pilot regions (prints ::notice:: lines).
+# Finds obilet hotel-search location ids (prints ::notice:: lines). Manual runs only; the
+# public repository keeps no artifacts of it.
 on:
-  push:
-    branches: [hotel-test]
-    paths:
-      - ".github/workflows/obilet-locate.yml"
-      - "hotels/obilet_locate.py"
   workflow_dispatch:
     inputs:
       queries:
@@ -36,10 +32,3 @@ jobs:
         run: |
           IFS='|' read -ra Q <<< "$QUERIES"
           python obilet_locate.py "${Q[@]}"
-      - name: Upload output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: obilet-locate
-          path: hotels/probe_out_obilet/
-          if-no-files-found: ignore

@@ -1,32 +1,51 @@
 # hotel-upload
 
 Hotel price collection for the Rotelio pilot (accommodation data). The collector runs in
-GitHub Actions twice a week and writes its results to the `data` branch. The Rotelio app
+GitHub Actions twice a week and writes its results to a separate private data repository. The Rotelio app
 repository does not run collectors or store datasets; this repository does.
 
 ## How it works
 
-- **Source:** obilet. One browser page per region is opened once for the site's cookies;
-  every price query is then sent from inside that page. One query returns every hotel of
-  the obilet location, so nothing is chosen or frozen in advance.
+- **Source:** obilet, the same site the flight collector
+  ([mertkiyar/rotelio-collector](https://github.com/mertkiyar/rotelio-collector)) uses. A
+  browser page gives the site's cookies; each price query is sent from inside that page and
+  returns every hotel of the obilet location, so nothing is chosen or frozen in advance.
 - **Regions:** the eight pilot regions of the flight data, same `region_id`s. Each has a
   centre and a radius in `hotels/obilet_regions.json`; only hotels inside it are kept.
-- **Stays:** a one-night stay for every check-in date in the next 60 days (the flight
-  horizon), for 2 adults (1 adult: first 30 days), plus a few real 3/7-night stays to check how well the sum
-  of nights matches a multi-night price. About 95 queries per region, 10 seconds apart. obilet's session stops answering after
-  about 10 minutes, so a fresh browser session is opened every 8 minutes (1 minute apart).
-  A refusal (HTTP 403/429) inside a session stops that region for the run.
-- **Schedule:** Tuesday and Friday 03:17 Turkish time (`.github/workflows/hotel-collect.yml`),
-  three regions at a time, about 25 minutes each.
+- **Dates:** the flight window, i.e. departures on the next 30 days. A one-night stay for
+  every check-in date in it, for 1 and for 2 adults (58 queries), so any stay inside the
+  window is priced as the sum of its nights. Plus 5 real multi-night stays (3, 7 and 14
+  nights, 2 adults) whose check-in day rotates every week; they measure how well the sum
+  of nights matches the site's own price. 63 queries per region, 504 per run.
+- **Pace:** as the flight collector: at least 30 s between queries, one region at a time,
+  a fresh browser session every 8 minutes (obilet's session stops answering after about
+  10). A refusal (HTTP 403/429) stops that region; two refusals stop the run. Nothing
+  retries automatically.
+- **Schedule:** Tuesday and Friday 00:17 Turkish time, two batches of four regions one after
+  the other (about 2.5 h each), finished before the flight collector's day starts.
+- **Storage:** results go to a separate **private** data repository; this repository is
+  public and holds code only. No Actions artifacts are uploaded.
 - **Tiers:** `hotels/segments.py` turns a run into Economy / Standard / Premium hotels for
   given dates, using only hotels bookable on every night.
+
+## Setup
+
+1. Create a private repository for the data (e.g. `hotel-data`) with a README.
+2. Create a fine-grained personal access token: *Only select repositories* = that data
+   repository, *Repository permissions > Contents* = Read and write. Nothing else.
+3. In this repository: Settings > Secrets and variables > Actions:
+   - secret `HOTEL_DATA_TOKEN` = the token
+   - variable `HOTEL_DATA_REPOSITORY` = `owner/hotel-data`
+   - variable `COLLECTION_ENABLED` = `true` once a manual trial run has succeeded
+4. The workflow refuses to run while this repository is private (to spend no private
+   minutes) and refuses to write to a data repository that is not private.
 
 Field definitions: [hotels/DATA_CONTRACT.md](hotels/DATA_CONTRACT.md).
 
 ## Running it by hand
 
-Actions tab → **hotel-collect** → **Run workflow**. For a short trial set `limit` to 2–3 and
-`target_branch` to `data-test`, so the real `data` branch stays clean.
+Actions tab > **hotel-collect** > **Run workflow**. For a short trial give one `region`
+and a small `limit` (e.g. 3).
 
 Locally (Windows: `py` instead of `python`), from the `hotels` folder:
 

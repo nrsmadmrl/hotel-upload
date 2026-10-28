@@ -1,6 +1,6 @@
 # Hotel observation contract - version 1.0
 
-Written by `obilet.py`, twice a week, to the `data` branch:
+Written by `obilet.py`, twice a week, to the private data repository:
 
 ```
 obilet/YYYY-MM-DD/<region_id>/offers.csv.gz   one row per hotel per query
@@ -25,13 +25,16 @@ coordinates; the destination airport is not the hotel location.
 
 ## Stays collected
 
-Inside the flight horizon (60 days, as the flight collector):
+The flight window (departures on the next 30 days, as the flight collector):
 
-- `stay_kind=night`: a one-night stay for every check-in date from tomorrow, for 2 adults, and for 1 adult in the
-  first 30 days (`adults_horizon_days`).
-- `stay_kind=validation`: a few real 3- and 7-night stays for 2 adults. They measure how far
-  the sum of one-night prices is from the site's own multi-night price
-  (`segments.validation_report`). Some hotels have a minimum stay and appear only in these.
+- `stay_kind=night`: a one-night stay for every check-in date whose check-out is inside the
+  window, for 1 adult and for 2 adults. A user's stay inside the window is priced as the sum
+  of its nights (`segments.py`); a hotel missing any night is left out, never estimated.
+- `stay_kind=validation`: five real stays for 2 adults (3, 7 and 14 nights from a check-in
+  3-9 days ahead; 3 and 7 nights from 14-20 days ahead). The check-in day moves every week,
+  so all weekdays are covered over time. They measure how far the sum of one-night prices is
+  from the site's own multi-night price (`segments.validation_report`). Hotels with a
+  minimum stay appear only in these rows.
 
 ## offers.csv.gz
 
@@ -68,7 +71,8 @@ re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
 
 One row per query: `query_state` is `ok`, `empty` (no priced hotel in the radius),
 `blocked` (HTTP 401/403/429), `http_error`, `not_json` or `dates_mismatch` (the response
-echoed other dates; nothing kept). A refusal (`blocked`) or three other failures in a row stop the region; the run is
+echoed other dates; nothing kept). A refusal (`blocked`) or three other failures in a row stop the region, two refused
+regions stop the run; the run is
 marked `stopped_early` in `manifest.json`. Blocks are not retried in a loop.
 
 ## Stay tiers

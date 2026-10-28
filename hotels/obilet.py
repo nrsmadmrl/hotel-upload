@@ -92,18 +92,31 @@ def _stay(check_in, nights, kind, adults):
                 nights=nights, kind=kind, adults=adults)
 
 
+def validation_stays(day, val):
+    """[{"offset", "nights"}]. Each entry of val["stays"] lists candidate check-in offsets;
+    the one used moves forward every week, so the check-in weekday of the same weekly run
+    changes from week to week and covers all seven weekdays over seven weeks. Old format: check_in_offsets x nights."""
+    if "stays" in val:
+        out = []
+        for s in val["stays"]:
+            offs = s["offsets"]
+            # by week, not by day: with fixed run weekdays a day-based index would repeat
+            out.append(dict(offset=offs[(day.toordinal() // 7) % len(offs)], nights=s["nights"]))
+        return out
+    return [dict(offset=o, nights=n) for o in val.get("check_in_offsets", []) for n in val.get("nights", [])]
+
+
 def plan_stays(day, cfg):
     """Validation stays first (fewest, most valuable), then every one-night stay."""
     start = day + timedelta(days=cfg.get("start_offset_days", 1))
     last_checkout = day + timedelta(days=cfg["horizon_days"])
     stays = []
     val = cfg.get("validation") or {}
-    for off in val.get("check_in_offsets", []):
-        a = day + timedelta(days=off)
-        for n in val.get("nights", []):
-            if a >= start and a + timedelta(days=n) <= last_checkout:
-                for ad in val.get("adults", [2]):
-                    stays.append(_stay(a, n, "validation", ad))
+    for v in validation_stays(day, val):
+        a = day + timedelta(days=v["offset"])
+        if a >= start and a + timedelta(days=v["nights"]) <= last_checkout:
+            for ad in val.get("adults", [2]):
+                stays.append(_stay(a, v["nights"], "validation", ad))
     # adults_horizon_days: {"1": 30} = 1-adult nights only for check-ins in the first 30 days
     limits = {int(k): v for k, v in (cfg.get("adults_horizon_days") or {}).items()}
     d = start
@@ -429,7 +442,8 @@ def collect_region(p, cfg, region, day, args):
 def cmd_collect(args):
     cfg = load_config(args.config)
     day = date.fromisoformat(args.date) if args.date else today()
-    regions = [r for r in cfg["regions"] if args.region in ("all", r["region_id"])]
+    wanted = set(args.region.split(","))
+    regions = [r for r in cfg["regions"] if "all" in wanted or r["region_id"] in wanted]
     missing = [r["region_id"] for r in regions if not (r.get("location") or {}).get("externalId")]
     if missing:
         print("no obilet location configured for:", ", ".join(missing), "(skipped)")
@@ -438,15 +452,27 @@ def cmd_collect(args):
         print("nothing to collect")
         return 2
     from playwright.sync_api import sync_playwright
-    result = 0
+    result, blocked = 0, []
+    max_blocked = cfg.get("max_blocked_regions", 2)
     with sync_playwright() as p:
-        for region in regions:
+        for n, region in enumerate(regions):
+            if n:
+                time.sleep(cfg.get("seconds_between_sessions", 60))
             try:
-                result = max(result, collect_region(p, cfg, region, day, args))
+                code = collect_region(p, cfg, region, day, args)
             except Exception as error:
                 print(region["region_id"], "ERROR", type(error).__name__, str(error)[:300])
-                result = max(result, 2)
-    return result
+                code = 2
+            if code == 3:
+                blocked.append(region["region_id"])
+                if len(blocked) >= max_blocked:
+                    print(f"STOP RUN: {len(blocked)} regions refused ({', '.join(blocked)}); "
+                          "the remaining regions are not contacted in this run")
+                    return 3
+            elif code:
+                result = 2
+    # one refused region does not stop the others, but the run is reported as incomplete
+    return 1 if blocked and not result else result
 
 
 def cmd_plan(args):
@@ -470,7 +496,7 @@ def main(argv=None):
     ap.add_argument("--config", default=str(CONFIG))
     sub = ap.add_subparsers(dest="command", required=True)
     c = sub.add_parser("collect")
-    c.add_argument("--region", default="all")
+    c.add_argument("--region", default="all", help="region_id, comma-separated ids, or all")
     c.add_argument("--limit", type=int, default=0, help="only the first N queries per region (testing)")
     c.add_argument("--out", default=str(ROOT / "out"))
     c.add_argument("--date", default=None, help="collection day override (testing only)")

@@ -9,7 +9,7 @@ import json
 import sys
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -45,6 +45,20 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(len(one), 30)
         self.assertEqual(one[-1]["check_in_date"], "2026-11-27")  # day + 30
         self.assertEqual(len(nights) - len(one), 59)
+
+    def test_validation_check_in_rotates_with_the_collection_day(self):
+        val = dict(adults=[2], stays=[dict(nights=3, offsets=[3, 4, 5, 6, 7, 8, 9])])
+        tuesdays = [date(2026, 10, 27) + timedelta(days=7 * k) for k in range(7)]
+        weekdays = {(d + timedelta(days=obilet.validation_stays(d, val)[0]["offset"])).weekday() for d in tuesdays}
+        self.assertEqual(len(weekdays), 7)  # seven Tuesday runs check in on all seven weekdays
+
+    def test_real_config_matches_the_flight_window(self):
+        cfg = obilet.load_config()
+        stays = obilet.plan_stays(date(2026, 10, 30), cfg)
+        self.assertTrue(all(s["check_out_date"] <= "2026-11-29" for s in stays))  # day + 30
+        self.assertEqual(sum(s["kind"] == "night" for s in stays), 29 * 2)
+        self.assertEqual(sorted({s["nights"] for s in stays if s["kind"] == "validation"}), [3, 7, 14])
+        self.assertGreaterEqual(cfg["gap_seconds"], 30)
 
     def test_validation_stays_fit_the_horizon(self):
         val = [s for s in obilet.plan_stays(DAY, self.CFG) if s["kind"] == "validation"]

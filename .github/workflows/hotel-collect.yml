@@ -1,34 +1,41 @@
 name: hotel-collect
 
-# Twice a week: obilet hotel prices for every pilot region (hotels/obilet.py), one job per
-# region, then one commit of the results to the `data` branch.
-# Cron is UTC: 00:17 UTC = 03:17 Europe/Istanbul, on Tuesday and Friday. GitHub may start
-# scheduled runs late; the minute is off the hour because on-the-hour runs queue longest.
+# obilet hotel prices for the eight pilot regions (hotels/obilet.py), written to a separate
+# private data repository. This code repository is public, so standard runners are free;
+# nothing collected is uploaded as an Actions artifact here.
+#
+# Pace follows the flight collector (mertkiyar/rotelio-collector): at least 30 s between
+# searches, one region at a time, a refusal stops that region, two refusals stop the run,
+# no automatic retries. Two batches of four regions run one after the other (~2.5 h each).
+#
+# Required settings (repository Settings > Secrets and variables > Actions):
+#   HOTEL_DATA_REPOSITORY  variable  private data repository, owner/name
+#   HOTEL_DATA_TOKEN       secret    fine-grained token: that repository only, Contents read/write
+#   COLLECTION_ENABLED     variable  "true" lets the schedule run (manual runs always work)
 on:
-  # Schedule paused until the reduced query plan is approved (2026-10-28).
-  # schedule:
-  #   - cron: "17 0 * * 2,5"
+  schedule:
+    # 21:17 UTC Monday and Thursday = 00:17 Tuesday and Friday in Turkey. Both batches end
+    # before the flight collector's first daily slot (09:17 Turkey time).
+    - cron: "17 21 * * 1,4"
   workflow_dispatch:
     inputs:
       region:
-        description: "region_id, or all"
+        description: "region_id(s), comma-separated, or all"
         default: "all"
       limit:
-        description: "only the first N queries per region (0 = full run)"
+        description: "only the first N queries per region (0 = full plan)"
         default: "0"
-      target_branch:
-        description: "branch that receives the results (use data-test for trial runs)"
-        default: "data"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: hotel-collect
   cancel-in-progress: false
 
 jobs:
-  regions:
+  batches:
+    if: ${{ github.event.repository.private == false && (github.event_name == 'workflow_dispatch' || vars.COLLECTION_ENABLED == 'true') }}
     runs-on: ubuntu-latest
     outputs:
       list: ${{ steps.pick.outputs.list }}
@@ -41,94 +48,91 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os
           cfg = json.load(open("hotels/obilet_regions.json", encoding="utf-8"))
-          want = os.environ["WANT"]
-          ids = [r["region_id"] for r in cfg["regions"]
-                 if (r.get("location") or {}).get("externalId") and want in ("all", r["region_id"])]
-          print("list=" + json.dumps(ids))
+          ready = [r["region_id"] for r in cfg["regions"] if (r.get("location") or {}).get("externalId")]
+          want = os.environ["WANT"].replace(" ", "")
+          if want == "all":
+              batches = [",".join(ready[i:i + 4]) for i in range(0, len(ready), 4)]
+          else:
+              batches = [",".join(r for r in want.split(",") if r in ready)]
+          print("list=" + json.dumps([b for b in batches if b]))
           PY
 
   collect:
-    needs: regions
-    if: needs.regions.outputs.list != '[]'
+    needs: batches
+    if: needs.batches.outputs.list != '[]'
+    name: Collect ${{ matrix.regions }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 210
     strategy:
-      fail-fast: false
-      max-parallel: 3
+      max-parallel: 1
+      fail-fast: true
       matrix:
-        region: ${{ fromJson(needs.regions.outputs.list) }}
-    defaults:
-      run:
-        working-directory: hotels
+        regions: ${{ fromJson(needs.batches.outputs.list) }}
+    env:
+      HOTEL_DATA_REPOSITORY: ${{ vars.HOTEL_DATA_REPOSITORY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Check access to the private data repository
+        env:
+          HOTEL_DATA_TOKEN: ${{ secrets.HOTEL_DATA_TOKEN }}
+        run: |
+          test -n "$HOTEL_DATA_REPOSITORY" || { echo "::error::Set the HOTEL_DATA_REPOSITORY variable"; exit 1; }
+          test -n "$HOTEL_DATA_TOKEN" || { echo "::error::Set the HOTEL_DATA_TOKEN secret"; exit 1; }
+          vis=$(curl -fsS -H "Authorization: Bearer $HOTEL_DATA_TOKEN" "https://api.github.com/repos/$HOTEL_DATA_REPOSITORY" | python3 -c "import json,sys; print(json.load(sys.stdin)['private'])")
+          test "$vis" = "True" || { echo "::error::$HOTEL_DATA_REPOSITORY must be a private repository"; exit 1; }
+          echo "private data repository reachable"
       - name: Install
+        working-directory: hotels
         run: |
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
       - name: Offline tests
+        working-directory: hotels
         run: python -m unittest discover -s tests
-      - name: Collect ${{ matrix.region }}
-        run: python obilet.py collect --region "${{ matrix.region }}" --limit "${{ github.event.inputs.limit || '0' }}" --out ../out
-      - name: Keep the region's files for the publish job
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: out-${{ matrix.region }}
-          path: out/
-          retention-days: 7
-          if-no-files-found: ignore
-
-  publish:
-    needs: collect
-    if: always() && needs.collect.result != 'skipped'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TARGET: ${{ github.event.inputs.target_branch || 'data' }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: out-*
-          path: out
-          merge-multiple: true
-      - name: Check out the data branch (created on first use)
+      - name: Collect
+        id: collect
+        working-directory: hotels
         run: |
-          git init -q data && cd data
-          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          set +e
+          python obilet.py collect --region "${{ matrix.regions }}" --limit "${{ github.event.inputs.limit || '0' }}" --out "$RUNNER_TEMP/out"
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" = 1 ] && echo "::warning::one region was refused by obilet; the others were collected"
+          [ "$code" = 2 ] && echo "::warning::some regions ended with errors; see the log"
+          exit 0
+      - name: Commit to the private data repository
+        env:
+          HOTEL_DATA_TOKEN: ${{ secrets.HOTEL_DATA_TOKEN }}
+        run: |
+          ls "$RUNNER_TEMP/out"/* >/dev/null 2>&1 || { echo "nothing collected"; exit 0; }
+          git clone -q --depth 1 "https://x-access-token:${HOTEL_DATA_TOKEN}@github.com/${HOTEL_DATA_REPOSITORY}.git" "$RUNNER_TEMP/data"
+          cd "$RUNNER_TEMP/data"
           git config user.name "github-actions[bot]"
           git config user.email "41898978+github-actions[bot]@users.noreply.github.com"
-          if git fetch -q --depth 1 origin "$TARGET"; then
-            git checkout -q -b "$TARGET" FETCH_HEAD
-          else
-            git checkout -q --orphan "$TARGET"
-            printf '%s\n' "# Hotel price data" "" \
-              "Written by the hotel-collect workflow. One folder per collection day and region:" \
-              "obilet/YYYY-MM-DD/<region_id>/{offers.csv.gz,hotels.csv,queries.csv,manifest.json}." \
-              "Field meanings: hotels/DATA_CONTRACT.md on the main branch." > README.md
-          fi
-      - name: Copy, index and commit
-        run: |
-          ls out >/dev/null 2>&1 || { echo "no output from any region"; exit 1; }
-          mkdir -p data/obilet
-          cp -r out/* data/obilet/
-          cd data
+          mkdir -p obilet && cp -r "$RUNNER_TEMP/out"/* obilet/
           python3 - <<'PY'
           import json, pathlib
           root = pathlib.Path("obilet")
           latest = {}
           for m in sorted(root.glob("*/*/manifest.json")):
               info = json.loads(m.read_text(encoding="utf-8"))
-              latest[info["region_id"]] = dict(collection_date=info["collection_date"],
-                                               path=str(m.parent), query_states=info["query_states"],
-                                               hotels_seen=info["hotels_seen"], stopped_early=info["stopped_early"])
+              latest[info["region_id"]] = dict(collection_date=info["collection_date"], path=str(m.parent),
+                                               query_states=info["query_states"], hotels_seen=info["hotels_seen"],
+                                               stopped_early=info["stopped_early"])
           (root / "latest.json").write_text(json.dumps(latest, ensure_ascii=False, indent=2), encoding="utf-8")
           PY
           git add -A
-          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
-          git commit -q -m "data: obilet hotels $(TZ=Europe/Istanbul date +%F) (run ${{ github.run_id }})"
-          git push -q origin "HEAD:$TARGET"
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git commit -q -m "obilet hotels $(TZ=Europe/Istanbul date +%F): ${{ matrix.regions }} (run ${{ github.run_id }})"
+          git push -q origin HEAD || { git pull -q --rebase origin HEAD && git push -q origin HEAD; }
           git log --oneline -1
+      - name: Stop the remaining batches after two refusals
+        if: steps.collect.outputs.code == '3'
+        run: |
+          echo "::error::two regions were refused by obilet; the next batch is not started"
+          exit 1

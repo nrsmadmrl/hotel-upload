@@ -1,32 +1,86 @@
 {
   "schema_version": "1.0",
   "comment": "Region ids match the flight data (Rotelio transportation/DATA_CONTRACT.md). centre + radius_km decide which hotels belong to a region; obilet's own location usually covers a wider area. location = the object obilet's search box returns (obilet_locate.py). Centres are approximate: check on a map.",
-  "horizon_days": 60,
+  "comment_dates": "Same window as the flight collector (mertkiyar/rotelio-collector): departures on the next 30 days. One-night stays for every check-in date whose check-out is inside the window; any user stay inside it is priced as the sum of its nights. Validation stays rotate their check-in day with the collection date.",
+  "horizon_days": 30,
   "start_offset_days": 1,
   "adults": [
     1,
     2
   ],
-  "adults_horizon_days": {"1": 30},
   "rooms": 1,
   "validation": {
-    "check_in_offsets": [
-      7,
-      21,
-      45
-    ],
-    "nights": [
-      3,
-      7
-    ],
     "adults": [
       2
+    ],
+    "stays": [
+      {
+        "nights": 3,
+        "offsets": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "nights": 7,
+        "offsets": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "nights": 14,
+        "offsets": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "nights": 3,
+        "offsets": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "nights": 7,
+        "offsets": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ]
+      }
     ]
   },
-  "gap_seconds": 10,
+  "gap_seconds": 30,
   "session_minutes": 8,
   "seconds_between_sessions": 60,
   "max_consecutive_failures": 3,
+  "max_blocked_regions": 2,
   "regions": [
     {
       "region_id": "antalya",
