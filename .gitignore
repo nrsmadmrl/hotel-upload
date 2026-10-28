@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+hotels/out/
+out/
+hotels/probe_out_obilet/
+hotels/data/debug/
+.venv/

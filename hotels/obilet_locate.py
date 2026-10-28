@@ -1,7 +1,7 @@
-"""Find obilet hotel-search locations by typing into the site's own search box.
+"""Find obilet hotel-search locations with the site's own search call.
 
-Opens a results page, types each query into the destination box (#origin-input) and
-prints every JSON response the page receives while typing. The location objects found
+Opens a results page (for the site's cookies) and sends each query to the search call the
+destination box uses (POST /json/oteller), from inside the page. The location objects found
 there (type / id / externalId / name / level) are what obilet.py needs in
 obilet_regions.json.
 
@@ -20,6 +20,13 @@ from pathlib import Path
 START_URL = "https://www.obilet.com/oteller/kemer-609-60689_23501_125560-2/20261210-20261211/2ad?locationLevel=5"
 OUT = Path(__file__).resolve().parent / "probe_out_obilet"
 IN_ACTIONS = os.environ.get("GITHUB_ACTIONS") == "true"
+SEARCH_PATH = "/json/oteller"
+SEARCH_JS = """async (q) => {
+  const r = await fetch("/json/oteller", {method: "POST", credentials: "include",
+    headers: {"content-type": "application/json", "x-correlation-id": ""},
+    body: JSON.stringify({query: q, page: 1})});
+  return {status: r.status, text: await r.text()};
+}"""
 
 
 def walk(obj):
@@ -55,28 +62,18 @@ def main():
         context = browser.new_context(locale="tr-TR", timezone_id="Europe/Istanbul",
                                       viewport={"width": 1366, "height": 900})
         page = context.new_page()
-        responses = []
-
-        def on_response(resp):
-            try:
-                if "obilet.com" in resp.url and "json" in (resp.headers.get("content-type") or ""):
-                    responses.append((resp.url, resp.request.method, resp.request.post_data, resp.text()))
-            except Exception:
-                pass
-
-        page.on("response", on_response)
         page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(6000)
 
         for q in args.queries:
-            responses.clear()
-            box = page.locator("#origin-input")
-            box.click()
-            page.wait_for_timeout(800)
-            page.keyboard.press("Control+A")
-            page.keyboard.press("Backspace")
-            page.keyboard.type(q, delay=120)
-            page.wait_for_timeout(4000)
+            # The search box calls POST /json/oteller {"query", "page"}; call it directly
+            # from the page (same cookies) instead of typing, which can race the page load.
+            page.wait_for_timeout(1500)
+            res = page.evaluate(SEARCH_JS, q)
+            responses = [(SEARCH_PATH, "POST", json.dumps({"query": q, "page": 1}, ensure_ascii=False),
+                          res["text"])] if res["status"] == 200 else []
+            if res["status"] != 200:
+                print(f"   search status {res['status']}: {res['text'][:120]}")
             cands, urls = [], []
             for url, method, body, text in responses:
                 try:
@@ -94,10 +91,12 @@ def main():
             for c in cands[:12]:
                 line = json.dumps(c, ensure_ascii=False)
                 print("  ", line)
-            if IN_ACTIONS:
-                print(f"::notice title=locate {q}::" + json.dumps(cands[:10], ensure_ascii=False))
-                if urls:
-                    print(f"::notice title=endpoint {q}::" + urls[0][:900])
+            if IN_ACTIONS:  # GitHub keeps only ~10 notices per step: one compact line per query
+                places = [c for c in cands if c.get("type") == 1][:6]
+                print(f"::notice title=locate {q}::" + json.dumps(
+                    [[c.get("id"), c.get("externalId"), c.get("text"), c.get("locationLevel"),
+                      round(c.get("latitude") or 0, 4), round(c.get("longitude") or 0, 4)] for c in places],
+                    ensure_ascii=False))
             if not cands:
                 shot = OUT / f"locate_{len(found)}.png"
                 page.screenshot(path=str(shot))

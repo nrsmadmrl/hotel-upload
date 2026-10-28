@@ -12,7 +12,7 @@ on:
       queries:
         description: "Search texts, separated by |"
         required: false
-        default: "Konyaaltı|Kaleiçi|Antalya|Çeşme|Alaçatı|Bodrum|Fethiye|Ölüdeniz|Trabzon|Göreme|Ürgüp|Gaziantep|Palandöken|Erzurum"
+        default: "Fethiye|Ölüdeniz|Trabzon|Maçka|Göreme|Ürgüp|Uçhisar|Gaziantep|Palandöken|Erzurum"
 
 jobs:
   locate:
@@ -32,7 +32,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Locate
         env:
-          QUERIES: ${{ github.event.inputs.queries || 'Konyaaltı|Kaleiçi|Antalya|Çeşme|Alaçatı|Bodrum|Fethiye|Ölüdeniz|Trabzon|Göreme|Ürgüp|Gaziantep|Palandöken|Erzurum' }}
+          QUERIES: ${{ github.event.inputs.queries || 'Fethiye|Ölüdeniz|Trabzon|Maçka|Göreme|Ürgüp|Uçhisar|Gaziantep|Palandöken|Erzurum' }}
         run: |
           IFS='|' read -ra Q <<< "$QUERIES"
           python obilet_locate.py "${Q[@]}"

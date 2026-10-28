@@ -1,0 +1,133 @@
+name: hotel-collect
+
+# Twice a week: obilet hotel prices for every pilot region (hotels/obilet.py), one job per
+# region, then one commit of the results to the `data` branch.
+# Cron is UTC: 00:17 UTC = 03:17 Europe/Istanbul, on Tuesday and Friday. GitHub may start
+# scheduled runs late; the minute is off the hour because on-the-hour runs queue longest.
+on:
+  schedule:
+    - cron: "17 0 * * 2,5"
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "region_id, or all"
+        default: "all"
+      limit:
+        description: "only the first N queries per region (0 = full run)"
+        default: "0"
+      target_branch:
+        description: "branch that receives the results (use data-test for trial runs)"
+        default: "data"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hotel-collect
+  cancel-in-progress: false
+
+jobs:
+  regions:
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.pick.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: pick
+        env:
+          WANT: ${{ github.event.inputs.region || 'all' }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          cfg = json.load(open("hotels/obilet_regions.json", encoding="utf-8"))
+          want = os.environ["WANT"]
+          ids = [r["region_id"] for r in cfg["regions"]
+                 if (r.get("location") or {}).get("externalId") and want in ("all", r["region_id"])]
+          print("list=" + json.dumps(ids))
+          PY
+
+  collect:
+    needs: regions
+    if: needs.regions.outputs.list != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        region: ${{ fromJson(needs.regions.outputs.list) }}
+    defaults:
+      run:
+        working-directory: hotels
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Offline tests
+        run: python -m unittest discover -s tests
+      - name: Collect ${{ matrix.region }}
+        run: python obilet.py collect --region "${{ matrix.region }}" --limit "${{ github.event.inputs.limit || '0' }}" --out ../out
+      - name: Keep the region's files for the publish job
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: out-${{ matrix.region }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  publish:
+    needs: collect
+    if: always() && needs.collect.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET: ${{ github.event.inputs.target_branch || 'data' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: out-*
+          path: out
+          merge-multiple: true
+      - name: Check out the data branch (created on first use)
+        run: |
+          git init -q data && cd data
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898978+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q --depth 1 origin "$TARGET"; then
+            git checkout -q -b "$TARGET" FETCH_HEAD
+          else
+            git checkout -q --orphan "$TARGET"
+            printf '%s\n' "# Hotel price data" "" \
+              "Written by the hotel-collect workflow. One folder per collection day and region:" \
+              "obilet/YYYY-MM-DD/<region_id>/{offers.csv.gz,hotels.csv,queries.csv,manifest.json}." \
+              "Field meanings: hotels/DATA_CONTRACT.md on the main branch." > README.md
+          fi
+      - name: Copy, index and commit
+        run: |
+          ls out >/dev/null 2>&1 || { echo "no output from any region"; exit 1; }
+          mkdir -p data/obilet
+          cp -r out/* data/obilet/
+          cd data
+          python3 - <<'PY'
+          import json, pathlib
+          root = pathlib.Path("obilet")
+          latest = {}
+          for m in sorted(root.glob("*/*/manifest.json")):
+              info = json.loads(m.read_text(encoding="utf-8"))
+              latest[info["region_id"]] = dict(collection_date=info["collection_date"],
+                                               path=str(m.parent), query_states=info["query_states"],
+                                               hotels_seen=info["hotels_seen"], stopped_early=info["stopped_early"])
+          (root / "latest.json").write_text(json.dumps(latest, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+          git add -A
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -q -m "data: obilet hotels $(TZ=Europe/Istanbul date +%F) (run ${{ github.run_id }})"
+          git push -q origin "HEAD:$TARGET"
+          git log --oneline -1

@@ -1,0 +1,1434 @@
+{
+ "data": {
+  "checkInDate": "2026-11-02T00:00:00",
+  "checkOutDate": "2026-11-03T00:00:00",
+  "night": 1,
+  "isCachedResponse": true,
+  "searchExpireOn": "2026-10-28T12:26:30.1171027Z",
+  "searchHotel": [
+   {
+    "id": "101893",
+    "name": "Lancora Beach Hotel",
+    "rating": 0.0,
+    "stars": 4.0,
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952303575100000/2/1/14734/lancora_beach.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23501~^005^~6055.2900~^005^~4~^005^~6055.29~^005^~faea72cc-4429-4b5a-bb21-849db17afa90",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1071777Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "16",
+       "name": "Herşey dahil",
+       "boardCategoryId": 43,
+       "boardCategoryName": "Her Şey Dahil",
+       "showOnCard": true,
+       "priority": 5
+      },
+      "price": {
+       "amount": 6055.0,
+       "currency": "TRY",
+       "fakeAmount": 6055.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 6055.29,
+       "priceInfo": {
+        "originalPrice": 6055.29,
+        "newPrice": 6055.29,
+        "provider": "JOLLY",
+        "normalProfit": 666.0819,
+        "amountToPay": 0.0,
+        "Profit": 666.0819,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 6055.0,
+        "virtualFakeAmount": 7384.5
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "JOLLY"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     2049,
+     1823,
+     1140,
+     1198,
+     2100,
+     1745,
+     1444,
+     1743,
+     1917,
+     1484,
+     2091,
+     1493,
+     1669,
+     1703,
+     1756,
+     1250,
+     2051,
+     1273,
+     2065,
+     1462,
+     1443,
+     1291,
+     1241,
+     2075,
+     1805,
+     1931,
+     2056,
+     1928,
+     1019,
+     1906,
+     1103,
+     1130,
+     1220,
+     1334,
+     1801,
+     2097,
+     1371,
+     1045,
+     2079,
+     1767,
+     1031,
+     2004,
+     2023,
+     1318,
+     1882,
+     2016,
+     1712,
+     1903,
+     1942,
+     2044
+    ],
+    "BadgeIds": [
+     28
+    ],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952303575100000/2/1/14734/lancora_beach.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/659402/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/659403/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/659404/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/659405/ob.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.60102188,
+     "longitude": 30.56735277,
+     "zoom": 17
+    },
+    "rank": 1,
+    "commentCount": 357,
+    "averageScore": 8.0,
+    "averageScoreText": "Çok iyi",
+    "averageScoreColor": "#1aa00a",
+    "quota": null,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 4,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 0.7,
+     "distanceM": 700.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": true,
+     "isShowCityCenterPin": true,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     43
+    ],
+    "hotelTypeId": 2,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 25.2,
+    "dynamicScore": 3.63,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "100+",
+    "couponRestricted": true,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 2
+   },
+   {
+    "id": "105843",
+    "name": "Amsterdam Otel & Suites",
+    "rating": 0.0,
+    "stars": 3.0,
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952303561770000/2/1/14724/amsterdam_otel_kemer.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23501~^005^~1954.0~^005^~8~^005^~1954.0~^005^~beabdf5e-be88-47fb-81a5-c2f2933754e6",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1071777Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "0",
+       "name": "Oda Kahvaltı",
+       "boardCategoryId": 39,
+       "boardCategoryName": "Kahvaltı Dahil",
+       "showOnCard": true,
+       "priority": 2
+      },
+      "price": {
+       "amount": 1954.0,
+       "currency": "TRY",
+       "fakeAmount": 1954.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 1954.0,
+       "priceInfo": {
+        "originalPrice": 1954.0,
+        "newPrice": 1954.0,
+        "provider": "TATILBUDUR",
+        "normalProfit": 224.71,
+        "amountToPay": 0.0,
+        "Profit": 224.71,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 1954.0,
+        "virtualFakeAmount": 2304.0
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "TATILBUDUR"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "quota": 0,
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     1314,
+     2049,
+     2065,
+     2091,
+     12,
+     1316,
+     1756,
+     1587,
+     1717,
+     1835,
+     2148,
+     1324,
+     1031,
+     2004,
+     1747,
+     1917,
+     2137,
+     2138,
+     1960
+    ],
+    "BadgeIds": [],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     },
+     {
+      "id": 54478,
+      "name": "Kemer Merkez",
+      "seoName": "kemer_merkez",
+      "level": 6,
+      "latitude": 36.60279,
+      "longitude": 30.55978,
+      "providerLocations": [
+       23501
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952303561770000/2/1/14724/amsterdam_otel_kemer.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/91741/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/91742/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/91743/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/91744/ob.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.6022214,
+     "longitude": 30.564373,
+     "zoom": 17
+    },
+    "rank": 2,
+    "commentCount": 89,
+    "averageScore": 8.5,
+    "averageScoreText": "Müthiş",
+    "averageScoreColor": "#1a7613",
+    "quota": 0,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 4,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 0.4,
+     "distanceM": 400.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": true,
+     "isShowCityCenterPin": true,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     39
+    ],
+    "hotelTypeId": 1,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 14.784,
+    "dynamicScore": 1.99,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "80+",
+    "couponRestricted": false,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 0
+   },
+   {
+    "id": "106038",
+    "name": "Forest Park Hotel",
+    "rating": 0.0,
+    "stars": 3.0,
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952303602400000/2/1/14769/forest_park_hotel.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23501~^005^~3175.0~^005^~8~^005^~3175.0~^005^~be8606b2-4bde-4890-bef2-4b9dc9ccac0e",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1044663Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "0",
+       "name": "İadesiz Oda Kahvaltı",
+       "boardCategoryId": 39,
+       "boardCategoryName": "Kahvaltı Dahil",
+       "showOnCard": true,
+       "priority": 2
+      },
+      "price": {
+       "amount": 3175.0,
+       "currency": "TRY",
+       "fakeAmount": 3175.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 3175.0,
+       "priceInfo": {
+        "originalPrice": 3175.0,
+        "newPrice": 3175.0,
+        "provider": "TATILBUDUR",
+        "normalProfit": 365.125,
+        "amountToPay": 0.0,
+        "Profit": 365.125,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 3175.0,
+        "virtualFakeAmount": 3879.0
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "TATILBUDUR"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "quota": 0,
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     2049,
+     1198,
+     1314,
+     1745,
+     1917,
+     1484,
+     2091,
+     1946,
+     1273,
+     2051,
+     1462,
+     1166,
+     2056,
+     1700,
+     1279,
+     1835,
+     2002,
+     1220,
+     1252,
+     1334,
+     1791,
+     1331,
+     1663,
+     1371,
+     2079,
+     1378,
+     2004,
+     1468,
+     1318,
+     1177,
+     1310,
+     2087,
+     1903,
+     1960,
+     1890
+    ],
+    "BadgeIds": [],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/455116/forest_park_hotel_455116.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/455136/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/455120/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/455128/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/455124/ob.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.58992984,
+     "longitude": 30.56415796,
+     "zoom": 17
+    },
+    "rank": 3,
+    "commentCount": 32,
+    "averageScore": 8.2,
+    "averageScoreText": "Çok iyi",
+    "averageScoreColor": "#1aa00a",
+    "quota": 0,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 4,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 1.5,
+     "distanceM": 1500.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": true,
+     "isShowCityCenterPin": true,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     39,
+     38
+    ],
+    "hotelTypeId": 2,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 13.44,
+    "dynamicScore": 1.81,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "30+",
+    "couponRestricted": false,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 7
+   },
+   {
+    "id": "667695",
+    "name": "Garden Prizma Rooms&Aparts",
+    "rating": 0.0,
+    "stars": 3.0,
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637916169738670000/2/1/77/garden_prizma_pension.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23501~^005^~1442.0~^005^~8~^005^~1442.0~^005^~5e2aef86-1320-4f7f-8716-da94a97ef540",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1071777Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "0",
+       "name": "Sadece Oda",
+       "boardCategoryId": 38,
+       "boardCategoryName": "Sadece Oda",
+       "showOnCard": false,
+       "priority": 1
+      },
+      "price": {
+       "amount": 1442.0,
+       "currency": "TRY",
+       "fakeAmount": 1442.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 1442.0,
+       "priceInfo": {
+        "originalPrice": 1442.0,
+        "newPrice": 1442.0,
+        "provider": "TATILBUDUR",
+        "normalProfit": 165.83,
+        "amountToPay": 0.0,
+        "Profit": 165.83,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 1442.0,
+        "virtualFakeAmount": 0.0
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "TATILBUDUR"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "quota": 0,
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     2049,
+     1444,
+     1917,
+     1273,
+     1878,
+     1835,
+     1220,
+     1334,
+     1058,
+     1378
+    ],
+    "BadgeIds": [],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/329356/garden_prizma_pension_329356.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/329362/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/329375/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/329369/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/329357/ob.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.59886103,
+     "longitude": 30.56458473,
+     "zoom": 17
+    },
+    "rank": 5,
+    "commentCount": 53,
+    "averageScore": 7.9,
+    "averageScoreText": "İyi",
+    "averageScoreColor": "#1aa00a",
+    "quota": 0,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 3,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 0.6,
+     "distanceM": 600.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": true,
+     "isShowCityCenterPin": true,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     39,
+     38
+    ],
+    "hotelTypeId": 2,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 10.811,
+    "dynamicScore": 1.45,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "50+",
+    "couponRestricted": false,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 0
+   },
+   {
+    "id": "1360088",
+    "name": "Opera Suites",
+    "rating": 0.0,
+    "stars": 3.0,
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/637952300722600000/2/1/14074/opera_suites.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23494~^005^~4069.7493000~^005^~10~^005^~5087.19~^005^~c007aa6d-da15-441a-a21b-bc0d827a5b95",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1034083Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "16",
+       "name": "Sadece Oda",
+       "boardCategoryId": 38,
+       "boardCategoryName": "Sadece Oda",
+       "showOnCard": false,
+       "priority": 1
+      },
+      "price": {
+       "amount": 5087.0,
+       "currency": "TRY",
+       "fakeAmount": 5087.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 5087.19,
+       "priceInfo": {
+        "originalPrice": 5087.19,
+        "newPrice": 5087.19,
+        "provider": "PAXIMUM",
+        "normalProfit": 966.5661,
+        "amountToPay": 0.0,
+        "Profit": 966.5661,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 5087.0,
+        "virtualFakeAmount": 0.0
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "PAXIMUM"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     2049,
+     1314,
+     1444,
+     1917,
+     1484,
+     2091,
+     1669,
+     1703,
+     2065,
+     1273,
+     1462,
+     1166,
+     1805,
+     2056,
+     1700,
+     1321,
+     1587,
+     1019,
+     1162,
+     2094,
+     1834,
+     1335,
+     1103,
+     1130,
+     1578,
+     2002,
+     1481,
+     1609,
+     1116,
+     1593,
+     2097,
+     1915,
+     1371,
+     1045,
+     2079,
+     1470,
+     1941,
+     1324,
+     1031,
+     2004,
+     2023,
+     1712,
+     1821,
+     1903,
+     1890
+    ],
+    "BadgeIds": [],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 6887,
+      "name": "Konyaaltı",
+      "seoName": "konyaalti",
+      "level": 5,
+      "latitude": 36.86752,
+      "longitude": 30.62467,
+      "providerLocations": [
+       60208
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://media.dev.paximum.com/hotelimages/1360088/616165b09a6f2e0a2cacb4d40735dabf.jpg",
+     "https://media.dev.paximum.com/hotelimages/1360088/b7147b3f314fab24d8f357cd1c2b8cfb.jpg",
+     "https://media.dev.paximum.com/hotelimages/1360088/5ea952d0ee8e89d15ece8e050ed53fee.jpg",
+     "https://media.dev.paximum.com/hotelimages/1360088/7dc9f2bf51bc86d5a9c0dcc4854f2b73.jpg",
+     "https://media.dev.paximum.com/hotelimages/1360088/277952f6a06af039d6a45cc4613e6b01.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.86587354,
+     "longitude": 30.63908946,
+     "zoom": 17
+    },
+    "rank": 177,
+    "commentCount": 1,
+    "averageScore": 9.0,
+    "averageScoreText": "Muhteşem",
+    "averageScoreColor": "#1a7613",
+    "quota": null,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 6,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 30.1,
+     "distanceM": 30100.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": false,
+     "isShowCityCenterPin": false,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     38
+    ],
+    "hotelTypeId": 2,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 1.274,
+    "dynamicScore": 0.0,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "1",
+    "couponRestricted": false,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 0
+   },
+   {
+    "id": "103284",
+    "name": "Opera Boutique Hotel",
+    "rating": 0.0,
+    "stars": 1.0,
+    "photoUrl": "https://media.dev.paximum.com/hotelimages/103284/231eb6763f723b8727df5918ca2bf209.jpg",
+    "offers": [
+     {
+      "id": "2$2$TR~^005^~23494~^005^~8248.0696000~^005^~10~^005^~10310.09~^005^~a3bb13de-9e46-4cfd-9e3d-761c282427d4",
+      "night": 1,
+      "availability": 1,
+      "expiresOn": "2026-10-28T12:26:30.1034083Z",
+      "isAvailable": true,
+      "isRefundable": false,
+      "roomItem": {
+       "id": null,
+       "name": null,
+       "originalName": null,
+       "displayName": null,
+       "roomSize": 0,
+       "roomSizeUnit": "m2",
+       "VirtualRoomId": 0,
+       "hotelRoomTypeId": 0,
+       "referanceRoomMappingId": 0
+      },
+      "boardItem": {
+       "id": "17",
+       "name": "Ücretsiz kahvaltı",
+       "boardCategoryId": 39,
+       "boardCategoryName": "Kahvaltı Dahil",
+       "showOnCard": true,
+       "priority": 2
+      },
+      "price": {
+       "amount": 10310.0,
+       "currency": "TRY",
+       "fakeAmount": 10310.0,
+       "discount": 0.0,
+       "discountRatio": 0.0,
+       "virtualAmount": 10310.09,
+       "priceInfo": {
+        "originalPrice": 10310.09,
+        "newPrice": 10310.09,
+        "provider": "PAXIMUM",
+        "normalProfit": 1958.9171,
+        "amountToPay": 0.0,
+        "Profit": 1958.9171,
+        "referanceOfferPrice": 0.0,
+        "referanceOfferProvider": null,
+        "referanceOfferProfit": 0.0,
+        "priceMatchingAmount": 0.0,
+        "TotalProfitDifferance": 0.0,
+        "fakeAmount": 10310.0,
+        "virtualFakeAmount": 0.0
+       },
+       "offerDiscounts": []
+      },
+      "supplier": {
+       "name": "PAXIMUM"
+      },
+      "refundableInfo": 2,
+      "handicaps": [],
+      "paymentOptions": [],
+      "taxInformation": {
+       "accommodationTaxInfo": {
+        "included": false,
+        "percent": 0.0
+       }
+      },
+      "additionalInfo": [],
+      "display": true,
+      "foreignCurrency": false,
+      "freeChildAges": [],
+      "lowestBadgeType": "Lowest"
+     }
+    ],
+    "facilityIds": [
+     2049,
+     1314,
+     1444,
+     1917,
+     1484,
+     2081,
+     2091,
+     1669,
+     1703,
+     2065,
+     1273,
+     1462,
+     1291,
+     1166,
+     1805,
+     2056,
+     1321,
+     1587,
+     1019,
+     1162,
+     2094,
+     1335,
+     1103,
+     2002,
+     1593,
+     2097,
+     1915,
+     1371,
+     2079,
+     1941,
+     1324,
+     2004,
+     2023,
+     1882,
+     1712,
+     1366,
+     1821,
+     1903,
+     1890,
+     2031
+    ],
+    "BadgeIds": [],
+    "themeIds": [
+     20
+    ],
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 6887,
+      "name": "Konyaaltı",
+      "seoName": "konyaalti",
+      "level": 5,
+      "latitude": 36.86752,
+      "longitude": 30.62467,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 54512,
+      "name": "Altınkum-Konyaaltı",
+      "seoName": "altinkum_konyaalti",
+      "level": 6,
+      "latitude": 36.86589,
+      "longitude": 30.63584,
+      "providerLocations": [
+       23531
+      ]
+     }
+    ],
+    "mediaFiles": [
+     "https://media.dev.paximum.com/hotelimages/103284/231eb6763f723b8727df5918ca2bf209.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/377150/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/377151/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/377152/ob.jpg",
+     "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/377153/ob.jpg"
+    ],
+    "geoLocation": {
+     "latitude": 36.865833,
+     "longitude": 30.639366,
+     "zoom": 17
+    },
+    "rank": 178,
+    "commentCount": 1,
+    "averageScore": 9.0,
+    "averageScoreText": "Muhteşem",
+    "averageScoreColor": "#1a7613",
+    "quota": null,
+    "listingRuleCompleteLabelType": "None",
+    "paymentOptions": [],
+    "isActive": true,
+    "taxInformation": {
+     "accommodationTaxInfo": {}
+    },
+    "segment": 4,
+    "nearestCityCenter": {
+     "id": 609,
+     "locationName": "Kemer",
+     "distanceKm": 30.1,
+     "distanceM": 30100.0,
+     "geoLocation": {
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "zoom": 15
+     },
+     "isCityCenter": false,
+     "isShowCityCenterPin": false,
+     "isShowCityCenterDistanceInfo": true
+    },
+    "isExternal": true,
+    "localPropertyList": [],
+    "boardCategoryFilterIds": [
+     39
+    ],
+    "hotelTypeId": 2,
+    "hotelTheme": null,
+    "hotelFacility": null,
+    "rankScore": 5.0,
+    "dynamicScore": 0.06,
+    "hotelCampainFilterIds": [],
+    "videoUrl": null,
+    "hasLowestPriceGuarantee": false,
+    "highlightTagsId": [
+     0
+    ],
+    "aISummary": "",
+    "commentCountText": "1",
+    "couponRestricted": false,
+    "hiddenOnCardFacilityIds": [],
+    "exclusiveProvider": 0
+   }
+  ],
+  "unavailableSearchHotel": [
+   {
+    "id": "1494230",
+    "name": "Cirali Anka Apart Bungalov",
+    "stars": 1.0,
+    "averageScoreText": "",
+    "photoUrl": "https://media.dev.paximum.com/hotelimages/1494230/09782a86216d56780944edd8c290ce2d.jpg",
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [],
+    "geoLocation": {
+     "latitude": 36.5643,
+     "longitude": 30.5447,
+     "zoom": 17
+    },
+    "commentCountText": "0",
+    "exclusiveProvider": 0
+   },
+   {
+    "id": "1487175",
+    "name": "Sandhill Beach Hotel",
+    "stars": 1.0,
+    "commentCount": 1,
+    "averageScore": 9.0,
+    "averageScoreText": "Muhteşem",
+    "averageScoreColor": "#1a7613",
+    "photoUrl": "https://media.dev.paximum.com/hotelimages/1487175/483f7a009d1b22e05081b6d86115e678.jpg",
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [],
+    "geoLocation": {
+     "latitude": 36.5643,
+     "longitude": 30.5447,
+     "zoom": 17
+    },
+    "commentCountText": "1",
+    "exclusiveProvider": 0
+   },
+   {
+    "id": "102358",
+    "name": "Mr. Crane Hotel",
+    "stars": 3.0,
+    "averageScoreText": "",
+    "photoUrl": "https://d3m404n3ahyqc3.cloudfront.net/images/product/1/2/0/2/2/659918/mr__crane_hotel_659918.jpg",
+    "geoBasedLocations": [
+     {
+      "id": 8,
+      "name": "Türkiye",
+      "seoName": "turkiye",
+      "level": 2,
+      "latitude": 38.9568857,
+      "longitude": 35.2408826
+     },
+     {
+      "id": 223,
+      "name": "Antalya",
+      "seoName": "antalya",
+      "level": 4,
+      "latitude": 36.89683,
+      "longitude": 30.71344,
+      "providerLocations": [
+       60208
+      ]
+     },
+     {
+      "id": 609,
+      "name": "Kemer",
+      "seoName": "kemer",
+      "level": 5,
+      "latitude": 36.60279,
+      "longitude": 30.55975,
+      "providerLocations": [
+       60689,
+       23501,
+       125560
+      ]
+     }
+    ],
+    "mediaFiles": [],
+    "geoLocation": {
+     "latitude": 36.59639036,
+     "longitude": 30.56220531,
+     "zoom": 17
+    },
+    "commentCountText": "0",
+    "exclusiveProvider": 0
+   }
+  ]
+ }
+}
