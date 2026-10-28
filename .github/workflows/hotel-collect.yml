@@ -112,6 +112,9 @@ jobs:
           ls "$RUNNER_TEMP/out"/* >/dev/null 2>&1 || { echo "nothing collected"; exit 0; }
           git clone -q --depth 1 "https://x-access-token:${HOTEL_DATA_TOKEN}@github.com/${HOTEL_DATA_REPOSITORY}.git" "$RUNNER_TEMP/data"
           cd "$RUNNER_TEMP/data"
+          # an empty data repository (no README yet) has no branch: start main
+          git rev-parse -q --verify HEAD >/dev/null || git checkout -q -b main
+          branch=$(git symbolic-ref --short HEAD)
           git config user.name "github-actions[bot]"
           git config user.email "41898978+github-actions[bot]@users.noreply.github.com"
           mkdir -p obilet && cp -r "$RUNNER_TEMP/out"/* obilet/
@@ -129,7 +132,7 @@ jobs:
           git add -A
           git diff --cached --quiet && { echo "nothing new"; exit 0; }
           git commit -q -m "obilet hotels $(TZ=Europe/Istanbul date +%F): ${{ matrix.regions }} (run ${{ github.run_id }})"
-          git push -q origin HEAD || { git pull -q --rebase origin HEAD && git push -q origin HEAD; }
+          git push -q origin "HEAD:$branch" || { git pull -q --rebase origin "$branch" && git push -q origin "HEAD:$branch"; }
           git log --oneline -1
       - name: Stop the remaining batches after two refusals
         if: steps.collect.outputs.code == '3'
