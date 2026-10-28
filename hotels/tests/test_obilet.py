@@ -188,5 +188,127 @@ class SegmentTests(unittest.TestCase):
         self.assertEqual(segments.tiers_for_stay(offers, hotels, "2026-11-14", "2026-11-17", adults=1)["bookable"], 0)
 
 
+# ---------------- refresh cycles, resume after a refusal (fake site, no network) ----------------
+
+class FakeSite:
+    """Answers like obilet for any dates, refuses (403) after `allow` queries."""
+    def __init__(self, allow):
+        self.allow, self.calls = allow, 0
+
+    def answer(self, path):
+        self.calls += 1
+        if self.calls > self.allow:
+            return dict(status=403, ms=100, text='"Forbidden"')
+        a, b = path.split("/")[4].split("-")
+        d = json.loads(json.dumps(FIXTURE))
+        d["data"]["checkInDate"] = f"{a[:4]}-{a[4:6]}-{a[6:]}T00:00:00"
+        d["data"]["checkOutDate"] = f"{b[:4]}-{b[4:6]}-{b[6:]}T00:00:00"
+        return dict(status=200, ms=500, text=json.dumps(d))
+
+
+class FakePage:
+    def __init__(self, site):
+        self.site = site
+
+    def goto(self, *a, **k):
+        pass
+
+    def wait_for_timeout(self, *a):
+        pass
+
+    def evaluate(self, js, args):
+        return self.site.answer(args[0])
+
+
+class FakePlaywright:
+    def __init__(self, site):
+        site_ = site
+
+        class Ctx:
+            def new_page(self):
+                return FakePage(site_)
+
+            def close(self):
+                pass
+
+        class Browser:
+            def new_context(self, **k):
+                return Ctx()
+
+            def close(self):
+                pass
+
+        class Chromium:
+            def launch(self, **k):
+                return Browser()
+
+        self.chromium = Chromium()
+
+
+class CycleTests(unittest.TestCase):
+    CFG = dict(horizon_days=4, start_offset_days=1, adults=[1, 2], rooms=1, cycle_weekdays=[1, 4],
+               validation=dict(adults=[2], stays=[dict(nights=2, offsets=[2])]),
+               gap_seconds=0, session_minutes=8, seconds_between_sessions=0, max_queries_per_run=0,
+               regions=[REGION, {**REGION, "region_id": "test_two"}])
+
+    def test_cycle_starts_on_tuesday_and_friday(self):
+        self.assertEqual(obilet.cycle_start(date(2026, 10, 28), self.CFG), date(2026, 10, 27))  # Wed -> Tue
+        self.assertEqual(obilet.cycle_start(date(2026, 10, 30), self.CFG), date(2026, 10, 30))  # Fri
+        self.assertEqual(obilet.cycle_start(date(2026, 11, 2), self.CFG), date(2026, 10, 30))   # Mon -> Fri
+
+    def test_jobs_interleave_regions_and_drop_past_check_ins(self):
+        regions = self.CFG["regions"]
+        jobs = obilet.build_jobs(self.CFG, regions, date(2026, 10, 27), date(2026, 10, 28))
+        first = [(r["region_id"], s["check_in_date"], s["adults"]) for r, s in jobs[:4]]
+        self.assertEqual(first, [("test_kemer", "2026-10-29", 1), ("test_two", "2026-10-29", 1),
+                                 ("test_kemer", "2026-10-29", 2), ("test_two", "2026-10-29", 2)])
+        self.assertTrue(all(s["check_in_date"] > "2026-10-28" for _, s in jobs))  # 10-28 is past
+        self.assertEqual(jobs[-1][1]["kind"], "validation")
+
+    def test_refusal_stops_the_run_and_the_next_run_resumes(self):
+        import types
+        with tempfile.TemporaryDirectory() as out:
+            cfg_path = Path(out) / "cfg.json"
+            cfg_path.write_text(json.dumps(self.CFG), encoding="utf-8")
+            fake_module = types.ModuleType("playwright.sync_api")
+            site = FakeSite(allow=3)
+
+            class Ctx:
+                def __enter__(self_inner):
+                    return FakePlaywright(site)
+
+                def __exit__(self_inner, *a):
+                    return False
+
+            fake_module.sync_playwright = lambda: Ctx()
+            old = sys.modules.get("playwright.sync_api")
+            sys.modules["playwright.sync_api"] = fake_module
+            try:
+                args = ["--config", str(cfg_path), "collect", "--out", out, "--date", "2026-10-28"]
+                self.assertEqual(obilet.main(args), 3)                 # refused after 3 answers
+                folder = Path(out) / "2026-10-27" / "test_kemer"
+                self.assertEqual(len(obilet.done_query_ids(folder)), 2)
+                m1 = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+                self.assertFalse(m1["complete"])
+                site.allow = 10 ** 6                                 # the next night: no refusal
+                self.assertEqual(obilet.main(args), 0)
+                m2 = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+                self.assertTrue(m2["complete"])
+                self.assertEqual(len(m2["runs"]), 2)
+                with gzip.open(folder / "offers.csv.gz", "rt", encoding="utf-8") as f:
+                    rows = list(csv.DictReader(f))                   # two gzip members read as one
+                self.assertEqual(len({(r["query_id"]) for r in rows}),
+                                 m2["planned_queries"] - m2["expired_queries"])
+                self.assertEqual(m2["expired_queries"], 2)            # check-in 10-28: 1 and 2 adults
+                calls = site.calls
+                self.assertEqual(obilet.main(args), 0)                 # complete: nothing is sent
+                self.assertEqual(site.calls, calls)
+            finally:
+                if old is not None:
+                    sys.modules["playwright.sync_api"] = old
+                else:
+                    sys.modules.pop("playwright.sync_api", None)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,21 +11,25 @@ Stays (all inside the flight window: departures on the next 30 days, see obilet_
   kind="validation"  a few real multi-night stays (2 adults) used to check how far the
                      sum of nightly prices is from the site's own multi-night price
 
+Refresh cycles start every Tuesday and Friday. Each run continues the current cycle with at
+most max_queries_per_run queries (nearest dates first, all regions interleaved); the next run
+continues where it stopped, until every query of the cycle is collected.
+
 Commands
     py obilet.py plan                         # show the queries, no network
-    py obilet.py collect --region antalya --limit 5 --headed
-    py obilet.py collect --region all
-    py obilet.py collect --region antalya --out out/
+    py obilet.py collect --region antalya --budget 5 --headed
+    py obilet.py collect                      # continue the current cycle, all regions
+    py obilet.py collect --out ../hotel-data/obilet
 
-Output (one folder per collection day and region):
-    <out>/<YYYY-MM-DD>/<region_id>/offers.csv.gz   one row per hotel per query
-    <out>/<YYYY-MM-DD>/<region_id>/hotels.csv      hotel facts seen in this run
-    <out>/<YYYY-MM-DD>/<region_id>/queries.csv     one row per query (audit)
-    <out>/<YYYY-MM-DD>/<region_id>/manifest.json   counts and settings
+Output (one folder per cycle start and region; later runs of the cycle append):
+    <out>/<cycle start>/<region_id>/offers.csv.gz   one row per hotel per query
+    <out>/<cycle start>/<region_id>/hotels.csv      hotel facts seen in the cycle
+    <out>/<cycle start>/<region_id>/queries.csv     one row per query attempt (audit)
+    <out>/<cycle start>/<region_id>/manifest.json   planned/collected/remaining/expired
 
 Safety rules: money is integer kurus; a missing price stays blank (never 0); a query is
 kept only when the response echoes the requested dates; three failed queries in a row
-stop the region (no retry loops against an access block).
+end the run (no retry loops against an access block); the next run continues.
 """
 
 import argparse
@@ -349,126 +353,213 @@ def write_csv(path, fields, rows, compress=False):
             w.writerow({k: csv_value(r.get(k)) for k in fields})
 
 
+# ---------------- refresh cycles (no network, tested offline) ----------------
+
+def cycle_start(day, cfg):
+    """Most recent cycle start on or before `day` (default Tuesday and Friday). A cycle is
+    one complete refresh of every region; nightly runs continue it until it is complete."""
+    starts = cfg.get("cycle_weekdays", [1, 4])  # Monday=0
+    d = day
+    while d.weekday() not in starts:
+        d -= timedelta(days=1)
+    return d
+
+
+def build_jobs(cfg, regions, cycle_day, day):
+    """[(region, stay)] still collectable on `day`, nearest dates first and interleaved across
+    regions, so a run that stops early still covers every region's near dates. Validation
+    stays come last. Stays are planned from the cycle start, so every night of one cycle asks
+    for the same dates; check-ins that are no longer in the future are dropped."""
+    per_region = {r["region_id"]: [s for s in plan_stays(cycle_day, cfg) if s["check_in_date"] > day.isoformat()]
+                  for r in regions}
+    nights, val = [], []
+    for k, r in enumerate(regions):
+        for s in per_region[r["region_id"]]:
+            key = (s["check_in_date"], s["adults"], k)
+            (nights if s["kind"] == "night" else val).append((key, r, s))
+    nights.sort(key=lambda x: x[0])
+    val.sort(key=lambda x: x[0])
+    return [(r, s) for _, r, s in nights + val]
+
+
+def region_dir(out_root, cycle_day, region_id):
+    return Path(out_root) / cycle_day.isoformat() / region_id
+
+
+def done_query_ids(folder):
+    """Queries of this cycle that already returned data (ok/empty); others are retried later."""
+    path = Path(folder) / "queries.csv"
+    if not path.exists():
+        return set()
+    with path.open(encoding="utf-8", newline="") as f:
+        return {r["query_id"] for r in csv.DictReader(f) if r.get("query_state") in ("ok", "empty")}
+
+
+def append_csv(path, fields, rows, compress=False):
+    """Append rows (header only for a new file). gzip appends a new member, which every gzip
+    reader treats as one continuous file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new = not path.exists()
+    f = gzip.open(path, "at", encoding="utf-8", newline="") if compress else \
+        path.open("a", encoding="utf-8", newline="")
+    with f:
+        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+        if new:
+            w.writeheader()
+        for r in rows:
+            w.writerow({k: csv_value(r.get(k)) for k in fields})
+
+
+def save_region(folder, cfg, region, cycle_day, day, offers, facts, queries, run_info):
+    """Merge one run's results into the cycle folder of a region and refresh its manifest."""
+    folder = Path(folder)
+    append_csv(folder / "offers.csv.gz", OFFER_FIELDS, offers, compress=True)
+    append_csv(folder / "queries.csv", QUERY_FIELDS, queries)
+    old = {}
+    if (folder / "hotels.csv").exists():
+        with (folder / "hotels.csv").open(encoding="utf-8", newline="") as f:
+            for r in csv.DictReader(f):
+                r["seen_available"] = int(r.get("seen_available") or 0)
+                r["seen_unavailable"] = int(r.get("seen_unavailable") or 0)
+                old[r["hotel_id"]] = r
+    merge_facts(old, facts)
+    write_csv(folder / "hotels.csv", HOTEL_FIELDS, sorted(old.values(), key=lambda f: f["hotel_id"]))
+    with (folder / "queries.csv").open(encoding="utf-8", newline="") as f:
+        all_q = list(csv.DictReader(f))
+    latest = {}
+    for q in all_q:  # a retried query counts once, with its last state
+        latest[q["query_id"]] = q["query_state"]
+    states = {}
+    for st in latest.values():
+        states[st] = states.get(st, 0) + 1
+    plan = plan_stays(cycle_day, cfg)
+    planned = len(plan)
+    got = {qid for qid, st in latest.items() if st in ("ok", "empty")}
+    rooms = cfg.get("rooms", 1)
+    ids = [(query_id(region["region_id"], s, rooms), s) for s in plan]
+    # a stay whose check-in has passed can no longer be collected in this cycle
+    expired = sum(1 for qid, s in ids if qid not in got and s["check_in_date"] <= day.isoformat())
+    open_left = sum(1 for qid, s in ids if qid not in got and s["check_in_date"] > day.isoformat())
+    mpath = folder / "manifest.json"
+    runs = json.loads(mpath.read_text(encoding="utf-8")).get("runs", []) if mpath.exists() else []
+    runs.append(run_info)
+    manifest = dict(schema_version=SCHEMA_VERSION, source="obilet", region_id=region["region_id"],
+                    cycle_start=cycle_day.isoformat(), collection_date=cycle_day.isoformat(),
+                    updated_at=datetime.now(TZ).isoformat(timespec="seconds"),
+                    planned_queries=planned, query_states=states,
+                    collected_queries=len(got), expired_queries=expired, remaining_queries=open_left,
+                    complete=open_left == 0,
+                    hotels_seen=len(old), stopped_early=bool(run_info.get("stopped")),
+                    runs=runs,
+                    settings=dict(radius_km=region["radius_km"], center=region["center"],
+                                  horizon_days=cfg["horizon_days"], adults=cfg.get("adults"),
+                                  rooms=cfg.get("rooms", 1), validation=cfg.get("validation"),
+                                  location=region["location"]))
+    mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    return manifest
+
+
 # ---------------- collection (network) ----------------
 
 BLOCK_STATUS = (401, 403, 429)
 
 
-def collect_region(p, cfg, region, day, args):
+def run_jobs(p, cfg, jobs, day, cycle_day, args):
+    """Send the queries one by one in ONE browser session chain shared by all regions.
+    Returns (results by region_id, exit code). Any refusal ends the run (saved, resumed by
+    the next run); there is no retry around it."""
     rooms = cfg.get("rooms", 1)
-    stays = plan_stays(day, cfg)
-    if args.limit:
-        stays = stays[: args.limit]
-    gap = cfg.get("gap_seconds", 4)
+    gap = cfg.get("gap_seconds", 30)
     max_fail = cfg.get("max_consecutive_failures", 3)
-    out_dir = Path(args.out) / day.isoformat() / region["region_id"]
-    rid = region["region_id"]
-    print(f"{rid}: {len(stays)} queries, radius {region['radius_km']} km -> {out_dir}")
-
+    session_seconds = cfg.get("session_minutes", 8) * 60
+    between = cfg.get("seconds_between_sessions", 60)
     browser = p.chromium.launch(headless=not args.headed)
     session = {}
+    first_stay = jobs[0][1]
 
     def open_session():
         """A fresh browser session (new cookies), like a new visit to the site. obilet's
         session stops answering after about 10 minutes, so each one is used for at most
-        session_minutes and then closed; reloading inside an old session does not renew it."""
+        session_minutes and then closed."""
         if session.get("context"):
             session["context"].close()
         session["context"] = browser.new_context(locale="tr-TR", timezone_id="Europe/Istanbul",
                                                  viewport={"width": 1366, "height": 900})
         session["page"] = session["context"].new_page()
-        session["page"].goto(page_url(region, stays[0]), wait_until="domcontentloaded", timeout=60000)
+        session["page"].goto(page_url({"location": {}}, first_stay), wait_until="domcontentloaded", timeout=60000)
         session["page"].wait_for_timeout(6000)
         session["started"] = time.monotonic()
         session["count"] = session.get("count", 0) + 1
 
-    def ask(stay):
-        try:
-            return session["page"].evaluate(FETCH_JS, [api_path(region, stay), body])
-        except Exception as error:  # page crashed or navigated away
-            return dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
-
-    session_seconds = cfg.get("session_minutes", 8) * 60
-    between = cfg.get("seconds_between_sessions", 60)
-    body = request_body(region)
-    open_session()
-    offers, facts, queries = [], {}, []
-    fails, result = 0, 0
-    for i, stay in enumerate(stays, 1):
-        if time.monotonic() - session["started"] > session_seconds:
-            print(f"  session {session['count']} used for {session_seconds // 60} min: new session in {between}s")
-            time.sleep(between)
-            open_session()
-        elif i > 1:
-            time.sleep(gap)
-        observed_at = datetime.now(TZ).isoformat(timespec="seconds")
-        q = dict(collection_date=day.isoformat(), query_id=query_id(rid, stay, rooms), region_id=rid,
-                 stay_kind=stay["kind"], check_in_date=stay["check_in_date"],
-                 check_out_date=stay["check_out_date"], nights=stay["nights"],
-                 search_adults=stay["adults"], observed_at=observed_at)
-        res = ask(stay)
-        q.update(http_status=res["status"], seconds=round(res["ms"] / 1000, 1))
-        state, data = None, None
-        if res["status"] == 200:
+    res_by = {}
+    fails, code = 0, 0
+    try:
+        open_session()
+        for i, (region, stay) in enumerate(jobs, 1):
+            rid = region["region_id"]
+            acc = res_by.setdefault(rid, dict(region=region, offers=[], facts={}, queries=[]))
+            if time.monotonic() - session["started"] > session_seconds:
+                print(f"  session {session['count']} used for {session_seconds // 60} min: new session in {between}s")
+                time.sleep(between)
+                open_session()
+            elif i > 1:
+                time.sleep(gap)
+            observed_at = datetime.now(TZ).isoformat(timespec="seconds")
+            q = dict(collection_date=day.isoformat(), query_id=query_id(rid, stay, rooms), region_id=rid,
+                     stay_kind=stay["kind"], check_in_date=stay["check_in_date"],
+                     check_out_date=stay["check_out_date"], nights=stay["nights"],
+                     search_adults=stay["adults"], observed_at=observed_at)
             try:
-                data = json.loads(res["text"])
-            except ValueError:
-                state = "not_json"
-        else:
-            state = "blocked" if res["status"] in BLOCK_STATUS else "http_error"
-        if data is not None and not response_matches(data, stay):
-            state, data = "dates_mismatch", None
-        if data is not None:
-            rows, fb, stats, cached = parse_response(data, region, stay, rooms, day, observed_at)
-            offers.extend(rows)
-            merge_facts(facts, fb)
-            state = "ok" if stats["available_in_radius"] else "empty"
-            q.update(stats, response_cached=cached)
-            fails = 0
-        else:
-            q["error_message"] = (res["text"] or "")[:300]
-            fails += 1
-        q["query_state"] = state
-        queries.append(q)
-        print(f"  [{i}/{len(stays)}] {stay['kind']:10} {stay['check_in_date']} {stay['nights']}n "
-              f"{stay['adults']}ad {state:14} {q.get('available_in_radius', '-')}/"
-              f"{q.get('hotels_in_radius', '-')} in radius  {q['seconds']}s")
-        if state == "blocked" or fails >= max_fail:
-            # A refusal inside a fresh session is a real block: stop, never retry around it.
-            why = f"HTTP {res['status']} (refused)" if state == "blocked" \
-                else f"{max_fail} failed queries in a row ({state})"
-            print(f"  STOP {rid}: {why}")
-            result = 3
-            break
-    browser.close()
-
-    write_csv(out_dir / "offers.csv.gz", OFFER_FIELDS, offers, compress=True)
-    write_csv(out_dir / "hotels.csv", HOTEL_FIELDS, sorted(facts.values(), key=lambda f: f["hotel_id"]))
-    write_csv(out_dir / "queries.csv", QUERY_FIELDS, queries)
-    states = {}
-    for q in queries:
-        states[q["query_state"]] = states.get(q["query_state"], 0) + 1
-    manifest = dict(schema_version=SCHEMA_VERSION, source="obilet", region_id=rid,
-                    collection_date=day.isoformat(), finished_at=datetime.now(TZ).isoformat(timespec="seconds"),
-                    planned_queries=len(stays), run_queries=len(queries), query_states=states,
-                    offer_rows=len(offers), hotels_seen=len(facts),
-                    hotels_ever_available=sum(1 for f in facts.values() if f["seen_available"]),
-                    stopped_early=result != 0, browser_sessions=session.get("count"),
-                    settings=dict(radius_km=region["radius_km"], center=region["center"],
-                                  horizon_days=cfg["horizon_days"], adults=cfg.get("adults"),
-                                  rooms=rooms, validation=cfg.get("validation"),
-                                  location=region["location"]))
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"{rid}: {states} | offer rows {len(offers)} | hotels {len(facts)}")
-    if os.environ.get("GITHUB_ACTIONS") == "true":
-        level = "warning" if result else "notice"
-        print(f"::{level} title=obilet {rid}::{json.dumps(dict(states=states, offers=len(offers), hotels=len(facts)))}")
-    return result
+                res = session["page"].evaluate(FETCH_JS, [api_path(region, stay), request_body(region)])
+            except Exception as error:  # page crashed or navigated away
+                res = dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
+            q.update(http_status=res["status"], seconds=round(res["ms"] / 1000, 1))
+            state, data = None, None
+            if res["status"] == 200:
+                try:
+                    data = json.loads(res["text"])
+                except ValueError:
+                    state = "not_json"
+            else:
+                state = "blocked" if res["status"] in BLOCK_STATUS else "http_error"
+            if data is not None and not response_matches(data, stay):
+                state, data = "dates_mismatch", None
+            if data is not None:
+                rows, fb, stats, cached = parse_response(data, region, stay, rooms, day, observed_at)
+                acc["offers"].extend(rows)
+                merge_facts(acc["facts"], fb)
+                state = "ok" if stats["available_in_radius"] else "empty"
+                q.update(stats, response_cached=cached)
+                fails = 0
+            else:
+                q["error_message"] = (res["text"] or "")[:300]
+                fails += 1
+            q["query_state"] = state
+            acc["queries"].append(q)
+            print(f"  [{i}/{len(jobs)}] {rid:14} {stay['kind']:10} {stay['check_in_date']} {stay['nights']}n "
+                  f"{stay['adults']}ad {state:14} {q.get('available_in_radius', '-')}/"
+                  f"{q.get('hotels_in_radius', '-')} in radius  {q['seconds']}s")
+            if state == "blocked" or fails >= max_fail:
+                why = f"HTTP {res['status']} (refused)" if state == "blocked" \
+                    else f"{max_fail} failed queries in a row ({state})"
+                print(f"  STOP RUN after {i} queries: {why}. Progress is saved; the next run continues.")
+                code = 3
+                break
+    except Exception as error:
+        print("ERROR", type(error).__name__, str(error)[:300])
+        code = code or 2
+    finally:
+        try:
+            browser.close()
+        except Exception:
+            pass
+    return res_by, code, session.get("count", 0)
 
 
 def cmd_collect(args):
     cfg = load_config(args.config)
     day = date.fromisoformat(args.date) if args.date else today()
+    cycle_day = cycle_start(day, cfg)
     wanted = set(args.region.split(","))
     regions = [r for r in cfg["regions"] if "all" in wanted or r["region_id"] in wanted]
     missing = [r["region_id"] for r in regions if not (r.get("location") or {}).get("externalId")]
@@ -478,28 +569,51 @@ def cmd_collect(args):
     if not regions:
         print("nothing to collect")
         return 2
+    done = set()
+    for r in regions:
+        done |= done_query_ids(region_dir(args.out, cycle_day, r["region_id"]))
+    rooms = cfg.get("rooms", 1)
+    jobs = [(r, s) for r, s in build_jobs(cfg, regions, cycle_day, day)
+            if query_id(r["region_id"], s, rooms) not in done]
+    if args.limit:  # testing: first N remaining queries per region
+        seen, kept = {}, []
+        for r, s in jobs:
+            seen[r["region_id"]] = seen.get(r["region_id"], 0) + 1
+            if seen[r["region_id"]] <= args.limit:
+                kept.append((r, s))
+        jobs = kept
+    budget = args.budget if args.budget is not None else cfg.get("max_queries_per_run", 150)
+    remaining = len(jobs)
+    jobs = jobs[:budget] if budget else jobs
+    print(f"{day}: cycle {cycle_day}, {len(done)} queries already collected, {remaining} remaining, "
+          f"{len(jobs)} in this run (budget {budget})")
+    if not jobs:
+        print("cycle complete: nothing to do")
+        return 0
     from playwright.sync_api import sync_playwright
-    result, blocked = 0, []
-    max_blocked = cfg.get("max_blocked_regions", 2)
+    started = datetime.now(TZ).isoformat(timespec="seconds")
     with sync_playwright() as p:
-        for n, region in enumerate(regions):
-            if n:
-                time.sleep(cfg.get("seconds_between_sessions", 60))
-            try:
-                code = collect_region(p, cfg, region, day, args)
-            except Exception as error:
-                print(region["region_id"], "ERROR", type(error).__name__, str(error)[:300])
-                code = 2
-            if code == 3:
-                blocked.append(region["region_id"])
-                if len(blocked) >= max_blocked:
-                    print(f"STOP RUN: {len(blocked)} regions refused ({', '.join(blocked)}); "
-                          "the remaining regions are not contacted in this run")
-                    return 3
-            elif code:
-                result = 2
-    # one refused region does not stop the others, but the run is reported as incomplete
-    return 1 if blocked and not result else result
+        res_by, code, sessions = run_jobs(p, cfg, jobs, day, cycle_day, args)
+    summary = {}
+    for rid, acc in res_by.items():
+        st = {}
+        for q in acc["queries"]:
+            st[q["query_state"]] = st.get(q["query_state"], 0) + 1
+        info = dict(started_at=started, collection_date=day.isoformat(), queries=st,
+                    offer_rows=len(acc["offers"]), browser_sessions=sessions, stopped=code == 3)
+        m = save_region(region_dir(args.out, cycle_day, rid), cfg, acc["region"], cycle_day, day,
+                        acc["offers"], acc["facts"], acc["queries"], info)
+        summary[rid] = dict(run=st, cycle=m["query_states"], complete=m["complete"])
+        print(f"{rid}: this run {st} | cycle {m['collected_queries']}/{m['planned_queries']} collected, "
+              f"{m['remaining_queries']} remaining, {m['expired_queries']} expired"
+              + (" | COMPLETE" if m["complete"] else ""))
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        level = "warning" if code else "notice"
+        sent = sum(sum(v["run"].values()) for v in summary.values())
+        print(f"::{level} title=obilet cycle {cycle_day}::" + json.dumps(dict(
+            sent=sent, budget=budget, remaining_before=remaining, stopped=code == 3,
+            complete=[k for k, v in summary.items() if v["complete"]])))
+    return code
 
 
 def cmd_plan(args):
@@ -524,8 +638,11 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="command", required=True)
     c = sub.add_parser("collect")
     c.add_argument("--region", default="all", help="region_id, comma-separated ids, or all")
-    c.add_argument("--limit", type=int, default=0, help="only the first N queries per region (testing)")
-    c.add_argument("--out", default=str(ROOT / "out"))
+    c.add_argument("--limit", type=int, default=0, help="only the first N remaining queries per region (testing)")
+    c.add_argument("--budget", type=int, default=None,
+                   help="max queries in this run (default max_queries_per_run; 0 = no limit)")
+    c.add_argument("--out", default=str(ROOT / "out"),
+                   help="data folder: <out>/<cycle start>/<region_id>/ (existing files are continued)")
     c.add_argument("--date", default=None, help="collection day override (testing only)")
     c.add_argument("--headed", action="store_true")
     pl = sub.add_parser("plan")

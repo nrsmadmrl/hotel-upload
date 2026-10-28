@@ -4,9 +4,11 @@ name: hotel-collect
 # private data repository. This code repository is public, so standard runners are free;
 # nothing collected is uploaded as an Actions artifact here.
 #
-# Pace follows the flight collector (mertkiyar/rotelio-collector): at least 30 s between
-# searches, one region at a time, a refusal stops that region, two refusals stop the run,
-# no automatic retries. Two batches of four regions run one after the other (~2.5 h each).
+# Refresh cycles start every Tuesday and Friday. Each night one run sends at most
+# max_queries_per_run queries (obilet_regions.json), nearest dates first across all regions,
+# and the next night continues where it stopped, until the cycle is complete. A refusal
+# (HTTP 403/429) ends that night's run; nothing retries around it. Pace as the flight
+# collector (mertkiyar/rotelio-collector): at least 30 s between searches.
 #
 # Required settings (repository Settings > Secrets and variables > Actions):
 #   HOTEL_DATA_REPOSITORY  variable  private data repository, owner/name
@@ -14,17 +16,17 @@ name: hotel-collect
 #   COLLECTION_ENABLED     variable  "true" lets the schedule run (manual runs always work)
 on:
   schedule:
-    # 21:17 UTC Monday and Thursday = 00:17 Tuesday and Friday in Turkey. Both batches end
-    # before the flight collector's first daily slot (09:17 Turkey time).
-    - cron: "17 21 * * 1,4"
+    # 21:17 UTC = 00:17 in Turkey, every night; finished long before the flight collector's
+    # first daily slot (09:17 Turkey time).
+    - cron: "17 21 * * *"
   workflow_dispatch:
     inputs:
       region:
         description: "region_id(s), comma-separated, or all"
         default: "all"
-      limit:
-        description: "only the first N queries per region (0 = full plan)"
-        default: "0"
+      budget:
+        description: "max queries in this run (empty = configured default)"
+        default: ""
 
 permissions:
   contents: read
@@ -34,40 +36,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  batches:
+  collect:
     if: ${{ github.event.repository.private == false && (github.event_name == 'workflow_dispatch' || vars.COLLECTION_ENABLED == 'true') }}
     runs-on: ubuntu-latest
-    outputs:
-      list: ${{ steps.pick.outputs.list }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: pick
-        env:
-          WANT: ${{ github.event.inputs.region || 'all' }}
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, os
-          cfg = json.load(open("hotels/obilet_regions.json", encoding="utf-8"))
-          ready = [r["region_id"] for r in cfg["regions"] if (r.get("location") or {}).get("externalId")]
-          want = os.environ["WANT"].replace(" ", "")
-          if want == "all":
-              batches = [",".join(ready[i:i + 4]) for i in range(0, len(ready), 4)]
-          else:
-              batches = [",".join(r for r in want.split(",") if r in ready)]
-          print("list=" + json.dumps([b for b in batches if b]))
-          PY
-
-  collect:
-    needs: batches
-    if: needs.batches.outputs.list != '[]'
-    name: Collect ${{ matrix.regions }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 210
-    strategy:
-      max-parallel: 1
-      fail-fast: true
-      matrix:
-        regions: ${{ fromJson(needs.batches.outputs.list) }}
+    timeout-minutes: 180
     env:
       HOTEL_DATA_REPOSITORY: ${{ vars.HOTEL_DATA_REPOSITORY }}
     steps:
@@ -77,7 +49,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Check access to the private data repository
+      - name: Check out the private data repository
         env:
           HOTEL_DATA_TOKEN: ${{ secrets.HOTEL_DATA_TOKEN }}
         run: |
@@ -85,7 +57,10 @@ jobs:
           test -n "$HOTEL_DATA_TOKEN" || { echo "::error::Set the HOTEL_DATA_TOKEN secret"; exit 1; }
           vis=$(curl -fsS -H "Authorization: Bearer $HOTEL_DATA_TOKEN" "https://api.github.com/repos/$HOTEL_DATA_REPOSITORY" | python3 -c "import json,sys; print(json.load(sys.stdin)['private'])")
           test "$vis" = "True" || { echo "::error::$HOTEL_DATA_REPOSITORY must be a private repository"; exit 1; }
-          echo "private data repository reachable"
+          git clone -q --depth 1 "https://x-access-token:${HOTEL_DATA_TOKEN}@github.com/${HOTEL_DATA_REPOSITORY}.git" "$RUNNER_TEMP/data"
+          cd "$RUNNER_TEMP/data"
+          # an empty data repository (no README yet) has no branch: start main
+          git rev-parse -q --verify HEAD >/dev/null || git checkout -q -b main
       - name: Install
         working-directory: hotels
         run: |
@@ -94,48 +69,42 @@ jobs:
       - name: Offline tests
         working-directory: hotels
         run: python -m unittest discover -s tests
-      - name: Collect
+      - name: Collect (continues the current cycle)
         id: collect
         working-directory: hotels
         run: |
           set +e
-          python obilet.py collect --region "${{ matrix.regions }}" --limit "${{ github.event.inputs.limit || '0' }}" --out "$RUNNER_TEMP/out"
+          budget="${{ github.event.inputs.budget }}"
+          python obilet.py collect --region "${{ github.event.inputs.region || 'all' }}" \
+            --out "$RUNNER_TEMP/data/obilet" ${budget:+--budget "$budget"}
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
-          [ "$code" = 1 ] && echo "::warning::one region was refused by obilet; the others were collected"
-          [ "$code" = 2 ] && echo "::warning::some regions ended with errors; see the log"
+          [ "$code" = 3 ] && echo "::warning::obilet refused a query; tonight's progress is saved and the next run continues"
+          [ "$code" = 2 ] && echo "::warning::the run ended with an error; see the log"
           exit 0
       - name: Commit to the private data repository
-        env:
-          HOTEL_DATA_TOKEN: ${{ secrets.HOTEL_DATA_TOKEN }}
         run: |
-          ls "$RUNNER_TEMP/out"/* >/dev/null 2>&1 || { echo "nothing collected"; exit 0; }
-          git clone -q --depth 1 "https://x-access-token:${HOTEL_DATA_TOKEN}@github.com/${HOTEL_DATA_REPOSITORY}.git" "$RUNNER_TEMP/data"
           cd "$RUNNER_TEMP/data"
-          # an empty data repository (no README yet) has no branch: start main
-          git rev-parse -q --verify HEAD >/dev/null || git checkout -q -b main
           branch=$(git symbolic-ref --short HEAD)
           git config user.name "github-actions[bot]"
           git config user.email "41898978+github-actions[bot]@users.noreply.github.com"
-          mkdir -p obilet && cp -r "$RUNNER_TEMP/out"/* obilet/
+          mkdir -p obilet
           python3 - <<'PY'
           import json, pathlib
           root = pathlib.Path("obilet")
           latest = {}
           for m in sorted(root.glob("*/*/manifest.json")):
               info = json.loads(m.read_text(encoding="utf-8"))
-              latest[info["region_id"]] = dict(collection_date=info["collection_date"], path=str(m.parent),
-                                               query_states=info["query_states"], hotels_seen=info["hotels_seen"],
-                                               stopped_early=info["stopped_early"])
+              if "cycle_start" not in info:  # early trial folders
+                  continue
+              latest[info["region_id"]] = dict(
+                  cycle_start=info.get("cycle_start", info.get("collection_date")), path=str(m.parent),
+                  complete=info.get("complete"), collected=info.get("collected_queries"),
+                  planned=info.get("planned_queries"), hotels_seen=info.get("hotels_seen"))
           (root / "latest.json").write_text(json.dumps(latest, ensure_ascii=False, indent=2), encoding="utf-8")
           PY
           git add -A
           git diff --cached --quiet && { echo "nothing new"; exit 0; }
-          git commit -q -m "obilet hotels $(TZ=Europe/Istanbul date +%F): ${{ matrix.regions }} (run ${{ github.run_id }})"
+          git commit -q -m "obilet hotels $(TZ=Europe/Istanbul date +%F) (run ${{ github.run_id }}, exit ${{ steps.collect.outputs.code }})"
           git push -q origin "HEAD:$branch" || { git pull -q --rebase origin "$branch" && git push -q origin "HEAD:$branch"; }
           git log --oneline -1
-      - name: Stop the remaining batches after two refusals
-        if: steps.collect.outputs.code == '3'
-        run: |
-          echo "::error::two regions were refused by obilet; the next batch is not started"
-          exit 1

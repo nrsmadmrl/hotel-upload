@@ -80,7 +80,8 @@
   "session_minutes": 8,
   "seconds_between_sessions": 60,
   "max_consecutive_failures": 3,
-  "max_blocked_regions": 2,
+  "cycle_weekdays": [1, 4],
+  "max_queries_per_run": 150,
   "regions": [
     {
       "region_id": "antalya",

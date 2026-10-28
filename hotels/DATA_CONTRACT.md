@@ -1,14 +1,20 @@
 # Hotel observation contract - version 1.0
 
-Written by `obilet.py`, twice a week, to the private data repository:
+Written by `obilet.py` to the private data repository, one folder per refresh cycle
+(cycles start every Tuesday and Friday; `YYYY-MM-DD` is the cycle start, filled over
+several nights):
 
 ```
-obilet/YYYY-MM-DD/<region_id>/offers.csv.gz   one row per hotel per query
-obilet/YYYY-MM-DD/<region_id>/hotels.csv      hotel facts seen in that run
-obilet/YYYY-MM-DD/<region_id>/queries.csv     one row per query (audit)
-obilet/YYYY-MM-DD/<region_id>/manifest.json   counts, settings, stop reason
-obilet/latest.json                            newest run per region
+obilet/YYYY-MM-DD/<region_id>/offers.csv.gz   one row per hotel per query (appended each night)
+obilet/YYYY-MM-DD/<region_id>/hotels.csv      hotel facts seen in the cycle
+obilet/YYYY-MM-DD/<region_id>/queries.csv     one row per query attempt (audit)
+obilet/YYYY-MM-DD/<region_id>/manifest.json   planned / collected / remaining / expired, runs
+obilet/latest.json                            newest cycle per region
 ```
+
+`collection_date` and `observed_at` in the rows are the real observation day and time; a
+cycle's rows can come from different nights. An expired query (its check-in passed before
+it was reached) has no rows: missing, never zero.
 
 Conventions follow the Rotelio data rules: money is integer kurus, `null`/blank means
 unknown (never free), observation time is kept apart from travel dates, and every price
@@ -76,8 +82,8 @@ re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
 
 One row per query: `query_state` is `ok`, `empty` (no priced hotel in the radius),
 `blocked` (HTTP 401/403/429), `http_error`, `not_json` or `dates_mismatch` (the response
-echoed other dates; nothing kept). A refusal (`blocked`) or three other failures in a row stop the region, two refused
-regions stop the run; the run is
+echoed other dates; nothing kept). A refusal (`blocked`) or three other failures in a row end that night's run; the next
+run continues the cycle; the run is
 marked `stopped_early` in `manifest.json`. Blocks are not retried in a loop.
 
 ## Stay tiers

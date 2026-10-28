@@ -17,12 +17,15 @@ repository does not run collectors or store datasets; this repository does.
   window is priced as the sum of its nights. Plus 5 real multi-night stays (3, 7 and 14
   nights, 2 adults) whose check-in day rotates every week; they measure how well the sum
   of nights matches the site's own price. 63 queries per region, 504 per run.
-- **Pace:** as the flight collector: at least 30 s between queries, one region at a time,
-  a fresh browser session every 8 minutes (obilet's session stops answering after about
-  10). A refusal (HTTP 403/429) stops that region; two refusals stop the run. Nothing
-  retries automatically.
-- **Schedule:** Tuesday and Friday 00:17 Turkish time, two batches of four regions one after
-  the other (about 2.5 h each), finished before the flight collector's day starts.
+- **Refresh cycles:** a cycle (all 504 queries) starts every Tuesday and Friday. obilet limits
+  how much it answers from GitHub's servers in a day, so the work is spread over nights:
+  every night at 00:17 Turkish time one run sends at most `max_queries_per_run` (150)
+  queries and the next night continues where it stopped. Queries are ordered by date across
+  all regions (tomorrow for every region first), so a short night still covers every region's
+  nearest dates. Check-ins that pass before they are reached are recorded as expired.
+- **Pace:** as the flight collector: at least 30 s between queries, a fresh browser session
+  every 8 minutes (obilet's session stops answering after about 10). A refusal (HTTP
+  403/429) ends that night's run; progress is kept and nothing retries around it.
 - **Storage:** results go to a separate **private** data repository; this repository is
   public and holds code only. No Actions artifacts are uploaded.
 - **Tiers:** `hotels/segments.py` turns a run into Economy / Standard / Premium hotels for
@@ -44,8 +47,8 @@ Field definitions: [hotels/DATA_CONTRACT.md](hotels/DATA_CONTRACT.md).
 
 ## Running it by hand
 
-Actions tab > **hotel-collect** > **Run workflow**. For a short trial give one `region`
-and a small `limit` (e.g. 3).
+Actions tab > **hotel-collect** > **Run workflow**. A manual run continues the current
+cycle like a nightly one; for a short trial give one `region` and a small `budget` (e.g. 5).
 
 Locally (Windows: `py` instead of `python`), from the `hotels` folder:
 
@@ -53,7 +56,7 @@ Locally (Windows: `py` instead of `python`), from the `hotels` folder:
 python -m pip install -r requirements.txt
 python -m playwright install chromium
 python obilet.py plan
-python obilet.py collect --region antalya --limit 5
+python obilet.py collect --region antalya --budget 5
 python segments.py --run out/2026-10-30 --region antalya --check-in 2026-11-14 --check-out 2026-11-17
 python -m unittest discover -s tests -v
 ```
