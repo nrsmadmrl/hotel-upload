@@ -1,0 +1,45 @@
+name: obilet-locate
+
+# Finds obilet hotel-search location ids for the pilot regions (prints ::notice:: lines).
+on:
+  push:
+    branches: [hotel-test]
+    paths:
+      - ".github/workflows/obilet-locate.yml"
+      - "hotels/obilet_locate.py"
+  workflow_dispatch:
+    inputs:
+      queries:
+        description: "Search texts, separated by |"
+        required: false
+        default: "Konyaaltı|Kaleiçi|Antalya|Çeşme|Alaçatı|Bodrum|Fethiye|Ölüdeniz|Trabzon|Göreme|Ürgüp|Gaziantep|Palandöken|Erzurum"
+
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: hotels
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Locate
+        env:
+          QUERIES: ${{ github.event.inputs.queries || 'Konyaaltı|Kaleiçi|Antalya|Çeşme|Alaçatı|Bodrum|Fethiye|Ölüdeniz|Trabzon|Göreme|Ürgüp|Gaziantep|Palandöken|Erzurum' }}
+        run: |
+          IFS='|' read -ra Q <<< "$QUERIES"
+          python obilet_locate.py "${Q[@]}"
+      - name: Upload output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: obilet-locate
+          path: hotels/probe_out_obilet/
+          if-no-files-found: ignore
