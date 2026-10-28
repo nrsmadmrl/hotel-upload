@@ -53,7 +53,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 3
       matrix:
         region: ${{ fromJson(needs.regions.outputs.list) }}
     defaults:

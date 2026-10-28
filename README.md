@@ -12,10 +12,11 @@ repository does not run collectors or store datasets; this repository does.
 - **Regions:** the eight pilot regions of the flight data, same `region_id`s. Each has a
   centre and a radius in `hotels/obilet_regions.json`; only hotels inside it are kept.
 - **Stays:** a one-night stay for every check-in date in the next 60 days (the flight
-  horizon), for 1 and 2 adults, plus a few real 3/7-night stays to check how well the sum
-  of nights matches a multi-night price. About 124 queries per region.
+  horizon), for 2 adults (1 adult: first 30 days), plus a few real 3/7-night stays to check how well the sum
+  of nights matches a multi-night price. About 95 queries per region, 10 seconds apart; if obilet refuses (HTTP 403/429) the
+  region pauses once, then stops for that run.
 - **Schedule:** Tuesday and Friday 03:17 Turkish time (`.github/workflows/hotel-collect.yml`),
-  regions in parallel, about 15 minutes each.
+  three regions at a time, about 25 minutes each.
 - **Tiers:** `hotels/segments.py` turns a run into Economy / Standard / Premium hotels for
   given dates, using only hotels bookable on every night.
 

@@ -7,6 +7,7 @@
     1,
     2
   ],
+  "adults_horizon_days": {"1": 30},
   "rooms": 1,
   "validation": {
     "check_in_offsets": [
@@ -22,7 +23,8 @@
       2
     ]
   },
-  "gap_seconds": 4,
+  "gap_seconds": 10,
+  "block_pause_seconds": 120,
   "max_consecutive_failures": 3,
   "regions": [
     {

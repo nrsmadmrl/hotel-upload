@@ -27,7 +27,8 @@ coordinates; the destination airport is not the hotel location.
 
 Inside the flight horizon (60 days, as the flight collector):
 
-- `stay_kind=night`: a one-night stay for every check-in date from tomorrow, for 1 and 2 adults.
+- `stay_kind=night`: a one-night stay for every check-in date from tomorrow, for 2 adults, and for 1 adult in the
+  first 30 days (`adults_horizon_days`).
 - `stay_kind=validation`: a few real 3- and 7-night stays for 2 adults. They measure how far
   the sum of one-night prices is from the site's own multi-night price
   (`segments.validation_report`). Some hotels have a minimum stay and appear only in these.
@@ -67,7 +68,8 @@ re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
 
 One row per query: `query_state` is `ok`, `empty` (no priced hotel in the radius),
 `blocked` (HTTP 401/403/429), `http_error`, `not_json` or `dates_mismatch` (the response
-echoed other dates; nothing kept). Three failures in a row stop the region; the run is
+echoed other dates; nothing kept). A refusal (`blocked`) pauses the region once and
+repeats that query; a second refusal, or three other failures in a row, stops the region; the run is
 marked `stopped_early` in `manifest.json`. Blocks are not retried in a loop.
 
 ## Stay tiers

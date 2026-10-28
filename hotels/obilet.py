@@ -104,9 +104,13 @@ def plan_stays(day, cfg):
             if a >= start and a + timedelta(days=n) <= last_checkout:
                 for ad in val.get("adults", [2]):
                     stays.append(_stay(a, n, "validation", ad))
+    # adults_horizon_days: {"1": 30} = 1-adult nights only for check-ins in the first 30 days
+    limits = {int(k): v for k, v in (cfg.get("adults_horizon_days") or {}).items()}
     d = start
     while d + timedelta(days=1) <= last_checkout:
         for ad in cfg.get("adults", [2]):
+            if ad in limits and (d - day).days > limits[ad]:
+                continue
             stays.append(_stay(d, 1, "night", ad))
         d += timedelta(days=1)
     return stays
@@ -307,8 +311,7 @@ def write_csv(path, fields, rows, compress=False):
 
 # ---------------- collection (network) ----------------
 
-class Stop(RuntimeError):
-    pass
+BLOCK_STATUS = (401, 403, 429)
 
 
 def collect_region(p, cfg, region, day, args):
@@ -331,10 +334,17 @@ def collect_region(p, cfg, region, day, args):
         page.goto(page_url(region, stays[0]), wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(6000)
 
+    def ask(stay):
+        try:
+            return page.evaluate(FETCH_JS, [api_path(region, stay), body])
+        except Exception as error:  # page crashed or navigated away
+            return dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
+
+    pause = cfg.get("block_pause_seconds", 120)
+    body = request_body(region)
     open_page()
     offers, facts, queries = [], {}, []
     fails, reopened, result = 0, False, 0
-    body = request_body(region)
     for i, stay in enumerate(stays, 1):
         if i > 1:
             time.sleep(gap)
@@ -343,10 +353,19 @@ def collect_region(p, cfg, region, day, args):
                  stay_kind=stay["kind"], check_in_date=stay["check_in_date"],
                  check_out_date=stay["check_out_date"], nights=stay["nights"],
                  search_adults=stay["adults"], observed_at=observed_at)
-        try:
-            res = page.evaluate(FETCH_JS, [api_path(region, stay), body])
-        except Exception as error:  # page crashed or navigated away
-            res = dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
+        res = ask(stay)
+        if res["status"] in BLOCK_STATUS and not reopened:
+            # The site refused (rate limit or expired session). Respect it: pause, open the
+            # results page once more and repeat this one query. A second refusal stops the
+            # region below; no identity changes, no retry loop.
+            reopened = True
+            print(f"  HTTP {res['status']}: pausing {pause}s, then reopening the results page once")
+            time.sleep(pause)
+            try:
+                open_page()
+                res = ask(stay)
+            except Exception as error:
+                print("  reopen failed:", error)
         q.update(http_status=res["status"], seconds=round(res["ms"] / 1000, 1))
         state, data = None, None
         if res["status"] == 200:
@@ -355,7 +374,7 @@ def collect_region(p, cfg, region, day, args):
             except ValueError:
                 state = "not_json"
         else:
-            state = "blocked" if res["status"] in (401, 403, 429) else "http_error"
+            state = "blocked" if res["status"] in BLOCK_STATUS else "http_error"
         if data is not None and not response_matches(data, stay):
             state, data = "dates_mismatch", None
         if data is not None:
@@ -373,16 +392,10 @@ def collect_region(p, cfg, region, day, args):
         print(f"  [{i}/{len(stays)}] {stay['kind']:10} {stay['check_in_date']} {stay['nights']}n "
               f"{stay['adults']}ad {state:14} {q.get('available_in_radius', '-')}/"
               f"{q.get('hotels_in_radius', '-')} in radius  {q['seconds']}s")
-        if fails >= max_fail:
-            if not reopened:  # cookies may have expired: one fresh page, once
-                reopened, fails = True, 0
-                print("  three failures in a row: reopening the results page once")
-                try:
-                    open_page()
-                    continue
-                except Exception as error:
-                    print("  reopen failed:", error)
-            print(f"  STOP {rid}: {max_fail} failed queries in a row ({state})")
+        if state == "blocked" or fails >= max_fail:
+            why = f"HTTP {res['status']} again after the pause" if state == "blocked" \
+                else f"{max_fail} failed queries in a row ({state})"
+            print(f"  STOP {rid}: {why}")
             result = 3
             break
     browser.close()

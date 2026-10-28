@@ -38,6 +38,14 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(nights[0]["check_in_date"], "2026-10-29")
         self.assertEqual(nights[-1]["check_out_date"], "2026-12-27")
 
+    def test_one_adult_nights_can_be_limited_to_the_first_days(self):
+        cfg = {**self.CFG, "adults_horizon_days": {"1": 30}}
+        nights = [s for s in obilet.plan_stays(DAY, cfg) if s["kind"] == "night"]
+        one = [s for s in nights if s["adults"] == 1]
+        self.assertEqual(len(one), 30)
+        self.assertEqual(one[-1]["check_in_date"], "2026-11-27")  # day + 30
+        self.assertEqual(len(nights) - len(one), 59)
+
     def test_validation_stays_fit_the_horizon(self):
         val = [s for s in obilet.plan_stays(DAY, self.CFG) if s["kind"] == "validation"]
         self.assertEqual(len(val), 6)
