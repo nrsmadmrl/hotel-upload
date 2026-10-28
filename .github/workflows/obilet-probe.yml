@@ -1,0 +1,51 @@
+name: obilet-probe
+
+# Runs when this file or a probe script is pushed to the hotel-test branch.
+on:
+  push:
+    branches: [hotel-test]
+    paths:
+      - ".github/workflows/obilet-probe.yml"
+      - "hotels/obilet_probe.py"
+      - "hotels/obilet_api_probe.py"
+      - "hotels/obilet_fetch_probe.py"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: hotels
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Probe obilet page
+        continue-on-error: true
+        run: python obilet_probe.py
+
+      - name: Probe obilet JSON endpoint
+        continue-on-error: true
+        run: python obilet_api_probe.py
+
+      - name: Probe obilet in-page fetch (many dates)
+        continue-on-error: true
+        run: python obilet_fetch_probe.py
+
+      - name: Upload probe output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: obilet-probe
+          path: hotels/probe_out_obilet/
+          if-no-files-found: ignore
