@@ -3,69 +3,168 @@
   "comment": "Region ids match the flight data (Rotelio transportation/DATA_CONTRACT.md). centre + radius_km decide which hotels belong to a region; obilet's own location usually covers a wider area. location = the object obilet's search box returns (obilet_locate.py). Centres are approximate: check on a map.",
   "horizon_days": 60,
   "start_offset_days": 1,
-  "adults": [1, 2],
+  "adults": [
+    1,
+    2
+  ],
   "rooms": 1,
-  "validation": {"check_in_offsets": [7, 21, 45], "nights": [3, 7], "adults": [2]},
+  "validation": {
+    "check_in_offsets": [
+      7,
+      21,
+      45
+    ],
+    "nights": [
+      3,
+      7
+    ],
+    "adults": [
+      2
+    ]
+  },
   "gap_seconds": 4,
   "max_consecutive_failures": 3,
   "regions": [
     {
       "region_id": "antalya",
       "area_name": "Kaleiçi-Konyaaltı",
-      "center": {"lat": 36.876, "lon": 30.668},
+      "center": {
+        "lat": 36.876,
+        "lon": 30.668
+      },
       "radius_km": 9,
-      "location": {"id": 357, "externalId": "23494", "name": "Antalya Şehir Merkezi", "type": "2", "isCityCenter": true, "level": 5},
+      "location": {
+        "id": 357,
+        "externalId": "23494",
+        "name": "Antalya Şehir Merkezi",
+        "type": "2",
+        "isCityCenter": true,
+        "level": 5
+      },
       "note": "centre between Kaleiçi (36.886, 30.705) and Konyaaltı beach (36.867, 30.625)"
     },
     {
       "region_id": "izmir_cesme",
       "area_name": "Çeşme-Alaçatı",
-      "center": {"lat": 38.305, "lon": 26.34},
+      "center": {
+        "lat": 38.305,
+        "lon": 26.34
+      },
       "radius_km": 9,
-      "location": {"id": 502, "externalId": "23402", "name": "Çeşme", "type": "2", "isCityCenter": false, "level": 5}
+      "location": {
+        "id": 502,
+        "externalId": "23402",
+        "name": "Çeşme",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 5
+      }
     },
     {
       "region_id": "mugla_bodrum",
       "area_name": "Bodrum",
-      "center": {"lat": 37.035, "lon": 27.431},
+      "center": {
+        "lat": 37.035,
+        "lon": 27.431
+      },
       "radius_km": 15,
-      "location": {"id": 476, "externalId": "60247_23429_20774_20770", "name": "Bodrum", "type": "2", "isCityCenter": false, "level": 5}
+      "location": {
+        "id": 476,
+        "externalId": "60247_23429_20774_20770",
+        "name": "Bodrum",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 5
+      }
     },
     {
       "region_id": "mugla_fethiye",
       "area_name": "Fethiye-Ölüdeniz",
-      "center": {"lat": 36.59, "lon": 29.12},
+      "center": {
+        "lat": 36.59,
+        "lon": 29.12
+      },
       "radius_km": 10,
-      "location": null
+      "location": {
+        "id": 544,
+        "externalId": "23418_60492_23425_23406",
+        "name": "Fethiye",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 5
+      },
+      "note": "Fethiye centre (36.62, 29.12) and Ölüdeniz (36.55, 29.12) are ~4 km from the centre"
     },
     {
       "region_id": "trabzon",
       "area_name": "Trabzon centre-Maçka",
-      "center": {"lat": 41.0, "lon": 39.72},
-      "radius_km": 15,
-      "location": null,
-      "note": "Maçka is about 22 km south of the centre; widen radius_km to include it"
+      "center": {
+        "lat": 40.91,
+        "lon": 39.665
+      },
+      "radius_km": 13,
+      "location": {
+        "id": 277,
+        "externalId": "91506_38283",
+        "name": "Trabzon",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 4
+      },
+      "note": "centre between Trabzon city (41.003, 39.717) and Maçka (40.814, 39.611); province-level obilet location"
     },
     {
       "region_id": "nevsehir",
       "area_name": "Göreme-Uçhisar-Ürgüp",
-      "center": {"lat": 38.638, "lon": 34.855},
+      "center": {
+        "lat": 38.638,
+        "lon": 34.855
+      },
       "radius_km": 9,
-      "location": null
+      "location": {
+        "id": 266,
+        "externalId": "98653",
+        "name": "Nevşehir",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 4
+      },
+      "note": "Göreme ~2 km, Uçhisar ~5 km, Ürgüp ~5 km from the centre; province-level obilet location"
     },
     {
       "region_id": "gaziantep",
       "area_name": "Gaziantep centre",
-      "center": {"lat": 37.066, "lon": 37.383},
+      "center": {
+        "lat": 37.066,
+        "lon": 37.383
+      },
       "radius_km": 8,
-      "location": null
+      "location": {
+        "id": 243,
+        "externalId": "98633",
+        "name": "Gaziantep",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 4
+      },
+      "note": "province-level obilet location, filtered to the city centre"
     },
     {
       "region_id": "erzurum",
       "area_name": "Palandöken",
-      "center": {"lat": 39.88, "lon": 41.28},
+      "center": {
+        "lat": 39.88,
+        "lon": 41.28
+      },
       "radius_km": 10,
-      "location": null,
+      "location": {
+        "id": 36259,
+        "externalId": "26146",
+        "name": "Palandöken",
+        "type": "2",
+        "isCityCenter": false,
+        "level": 5
+      },
       "note": "between Erzurum centre and the Palandöken ski area"
     }
   ]

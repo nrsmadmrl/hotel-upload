@@ -47,8 +47,10 @@ TZ = ZoneInfo("Europe/Istanbul")
 SCHEMA_VERSION = "1.0"
 SITE = "https://www.obilet.com"
 
-OFFER_FIELDS = """schema_version observation_id query_id collection_date observed_at region_id
-hotel_id hotel_name stay_kind check_in_date check_out_date nights lead_days search_adults
+# observation_id and hotel_name are computed for each row but not written: they are the
+# least compressible columns (hotel names live in hotels.csv; query_id + hotel_id is unique).
+OFFER_FIELDS = """schema_version query_id collection_date observed_at region_id
+hotel_id stay_kind check_in_date check_out_date nights lead_days search_adults
 search_children search_rooms availability_status currency price_total_minor price_per_night_minor
 price_scope board_category_id board_category_name board_name is_refundable supplier
 accommodation_tax_included response_cached response_expires_at analysis_eligible source""".split()

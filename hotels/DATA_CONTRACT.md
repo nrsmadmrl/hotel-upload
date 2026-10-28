@@ -34,10 +34,11 @@ Inside the flight horizon (60 days, as the flight collector):
 
 ## offers.csv.gz
 
-- `schema_version`: `1.0`. `observation_id`: unique per query, hotel and observation time.
+- `schema_version`: `1.0`. One row per (`query_id`, `hotel_id`) in a run; join `hotels.csv` on
+  `hotel_id` for the name and facts.
 - `query_id`: region, check-in, check-out, adults, rooms, currency and schema version.
 - `collection_date` (Europe/Istanbul day), `observed_at` (timestamp with offset).
-- `region_id`, `hotel_id` (obilet id), `hotel_name` (original spelling).
+- `region_id`, `hotel_id` (obilet id).
 - `stay_kind`, `check_in_date`, `check_out_date`, `nights`, `lead_days` (check-in minus collection day).
 - `search_adults` (1 or 2), `search_children` (0), `search_rooms` (1).
 - `availability_status`: `available` (priced), `listed_no_price`, or `unavailable` (obilet lists
