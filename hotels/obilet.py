@@ -28,8 +28,9 @@ Output (one folder per cycle start and region; later runs of the cycle append):
     <out>/<cycle start>/<region_id>/manifest.json   planned/collected/remaining/expired
 
 Safety rules: money is integer kurus; a missing price stays blank (never 0); a query is
-kept only when the response echoes the requested dates; three failed queries in a row
-end the run (no retry loops against an access block); the next run continues.
+kept only when the response echoes the requested dates; a refusal (HTTP 401/403/429) or
+three other failed queries in a row end the run (no retry loops against an access block);
+the next run continues the cycle.
 """
 
 import argparse
