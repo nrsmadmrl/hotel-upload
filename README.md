@@ -13,8 +13,9 @@ repository does not run collectors or store datasets; this repository does.
   centre and a radius in `hotels/obilet_regions.json`; only hotels inside it are kept.
 - **Stays:** a one-night stay for every check-in date in the next 60 days (the flight
   horizon), for 2 adults (1 adult: first 30 days), plus a few real 3/7-night stays to check how well the sum
-  of nights matches a multi-night price. About 95 queries per region, 10 seconds apart; if obilet refuses (HTTP 403/429) the
-  region pauses once, then stops for that run.
+  of nights matches a multi-night price. About 95 queries per region, 10 seconds apart. obilet's session stops answering after
+  about 10 minutes, so a fresh browser session is opened every 8 minutes (1 minute apart).
+  A refusal (HTTP 403/429) inside a session stops that region for the run.
 - **Schedule:** Tuesday and Friday 03:17 Turkish time (`.github/workflows/hotel-collect.yml`),
   three regions at a time, about 25 minutes each.
 - **Tiers:** `hotels/segments.py` turns a run into Economy / Standard / Premium hotels for

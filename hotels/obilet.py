@@ -326,27 +326,40 @@ def collect_region(p, cfg, region, day, args):
     print(f"{rid}: {len(stays)} queries, radius {region['radius_km']} km -> {out_dir}")
 
     browser = p.chromium.launch(headless=not args.headed)
-    context = browser.new_context(locale="tr-TR", timezone_id="Europe/Istanbul",
-                                  viewport={"width": 1366, "height": 900})
-    page = context.new_page()
+    session = {}
 
-    def open_page():
-        page.goto(page_url(region, stays[0]), wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(6000)
+    def open_session():
+        """A fresh browser session (new cookies), like a new visit to the site. obilet's
+        session stops answering after about 10 minutes, so each one is used for at most
+        session_minutes and then closed; reloading inside an old session does not renew it."""
+        if session.get("context"):
+            session["context"].close()
+        session["context"] = browser.new_context(locale="tr-TR", timezone_id="Europe/Istanbul",
+                                                 viewport={"width": 1366, "height": 900})
+        session["page"] = session["context"].new_page()
+        session["page"].goto(page_url(region, stays[0]), wait_until="domcontentloaded", timeout=60000)
+        session["page"].wait_for_timeout(6000)
+        session["started"] = time.monotonic()
+        session["count"] = session.get("count", 0) + 1
 
     def ask(stay):
         try:
-            return page.evaluate(FETCH_JS, [api_path(region, stay), body])
+            return session["page"].evaluate(FETCH_JS, [api_path(region, stay), body])
         except Exception as error:  # page crashed or navigated away
             return dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
 
-    pause = cfg.get("block_pause_seconds", 120)
+    session_seconds = cfg.get("session_minutes", 8) * 60
+    between = cfg.get("seconds_between_sessions", 60)
     body = request_body(region)
-    open_page()
+    open_session()
     offers, facts, queries = [], {}, []
-    fails, reopened, result = 0, False, 0
+    fails, result = 0, 0
     for i, stay in enumerate(stays, 1):
-        if i > 1:
+        if time.monotonic() - session["started"] > session_seconds:
+            print(f"  session {session['count']} used for {session_seconds // 60} min: new session in {between}s")
+            time.sleep(between)
+            open_session()
+        elif i > 1:
             time.sleep(gap)
         observed_at = datetime.now(TZ).isoformat(timespec="seconds")
         q = dict(collection_date=day.isoformat(), query_id=query_id(rid, stay, rooms), region_id=rid,
@@ -354,18 +367,6 @@ def collect_region(p, cfg, region, day, args):
                  check_out_date=stay["check_out_date"], nights=stay["nights"],
                  search_adults=stay["adults"], observed_at=observed_at)
         res = ask(stay)
-        if res["status"] in BLOCK_STATUS and not reopened:
-            # The site refused (rate limit or expired session). Respect it: pause, open the
-            # results page once more and repeat this one query. A second refusal stops the
-            # region below; no identity changes, no retry loop.
-            reopened = True
-            print(f"  HTTP {res['status']}: pausing {pause}s, then reopening the results page once")
-            time.sleep(pause)
-            try:
-                open_page()
-                res = ask(stay)
-            except Exception as error:
-                print("  reopen failed:", error)
         q.update(http_status=res["status"], seconds=round(res["ms"] / 1000, 1))
         state, data = None, None
         if res["status"] == 200:
@@ -393,7 +394,8 @@ def collect_region(p, cfg, region, day, args):
               f"{stay['adults']}ad {state:14} {q.get('available_in_radius', '-')}/"
               f"{q.get('hotels_in_radius', '-')} in radius  {q['seconds']}s")
         if state == "blocked" or fails >= max_fail:
-            why = f"HTTP {res['status']} again after the pause" if state == "blocked" \
+            # A refusal inside a fresh session is a real block: stop, never retry around it.
+            why = f"HTTP {res['status']} (refused)" if state == "blocked" \
                 else f"{max_fail} failed queries in a row ({state})"
             print(f"  STOP {rid}: {why}")
             result = 3
@@ -411,7 +413,7 @@ def collect_region(p, cfg, region, day, args):
                     planned_queries=len(stays), run_queries=len(queries), query_states=states,
                     offer_rows=len(offers), hotels_seen=len(facts),
                     hotels_ever_available=sum(1 for f in facts.values() if f["seen_available"]),
-                    stopped_early=result != 0,
+                    stopped_early=result != 0, browser_sessions=session.get("count"),
                     settings=dict(radius_km=region["radius_km"], center=region["center"],
                                   horizon_days=cfg["horizon_days"], adults=cfg.get("adults"),
                                   rooms=rooms, validation=cfg.get("validation"),

@@ -68,8 +68,7 @@ re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
 
 One row per query: `query_state` is `ok`, `empty` (no priced hotel in the radius),
 `blocked` (HTTP 401/403/429), `http_error`, `not_json` or `dates_mismatch` (the response
-echoed other dates; nothing kept). A refusal (`blocked`) pauses the region once and
-repeats that query; a second refusal, or three other failures in a row, stops the region; the run is
+echoed other dates; nothing kept). A refusal (`blocked`) or three other failures in a row stop the region; the run is
 marked `stopped_early` in `manifest.json`. Blocks are not retried in a loop.
 
 ## Stay tiers
