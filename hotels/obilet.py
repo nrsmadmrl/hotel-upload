@@ -6,8 +6,8 @@ returns every hotel of the obilet location, so nothing is frozen in advance: eac
 records every hotel inside the region radius, open or closed, and segments are computed
 later for the dates a user asks about (segments.py).
 
-Stays (all inside the flight horizon, default 60 days, see obilet_regions.json):
-  kind="night"       one-night stay for every check-in date, for every adult count
+Stays (all inside the flight window: departures on the next 30 days, see obilet_regions.json):
+  kind="night"       one-night stay for every check-in date, for 1 and for 2 adults
   kind="validation"  a few real multi-night stays (2 adults) used to check how far the
                      sum of nightly prices is from the site's own multi-night price
 
