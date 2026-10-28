@@ -1429,6 +1429,162 @@
     "commentCountText": "0",
     "exclusiveProvider": 0
    }
+  ],
+  "hotelFacilities": [
+   {
+    "id": 2163,
+    "name": "Muhafazakar"
+   },
+   {
+    "id": 2164,
+    "name": "Alkolsüz Tesis"
+   },
+   {
+    "id": 1946,
+    "name": "Jakuzi"
+   },
+   {
+    "id": 2049,
+    "name": "Havuz"
+   },
+   {
+    "id": 1314,
+    "name": "Otopark"
+   },
+   {
+    "id": 2091,
+    "name": "Wi-Fi"
+   },
+   {
+    "id": 1140,
+    "name": "Plaj"
+   },
+   {
+    "id": 1602,
+    "name": "Özel Plaj"
+   },
+   {
+    "id": 1666,
+    "name": "Çalışma Alanları"
+   },
+   {
+    "id": 1823,
+    "name": "Beach"
+   },
+   {
+    "id": 1250,
+    "name": "Toplantı Odaları"
+   },
+   {
+    "id": 1462,
+    "name": "Restoran"
+   },
+   {
+    "id": 1775,
+    "name": "Isıtmalı Açık Havuz"
+   },
+   {
+    "id": 2051,
+    "name": "Hamam"
+   },
+   {
+    "id": 1184,
+    "name": "Doğa Manzarası"
+   },
+   {
+    "id": 1198,
+    "name": "Spa"
+   },
+   {
+    "id": 1443,
+    "name": "Spor Salonu"
+   },
+   {
+    "id": 2013,
+    "name": "Isıtmalı Havuz"
+   },
+   {
+    "id": 1568,
+    "name": "Göl Manzarası"
+   },
+   {
+    "id": 2039,
+    "name": "Özel Havuz"
+   },
+   {
+    "id": 2075,
+    "name": "Masaj"
+   },
+   {
+    "id": 1494,
+    "name": "Elektrikli Araç Sarj İstasyonu"
+   },
+   {
+    "id": 1878,
+    "name": "Evcil Hayvan Dostu"
+   },
+   {
+    "id": 1928,
+    "name": "Fitness"
+   },
+   {
+    "id": 2133,
+    "name": "Çocuk Havuzu"
+   },
+   {
+    "id": 1321,
+    "name": "Şehir Manzarası"
+   },
+   {
+    "id": 1799,
+    "name": "Nehir Manzarası"
+   },
+   {
+    "id": 2100,
+    "name": "Deniz Manzarası"
+   },
+   {
+    "id": 1791,
+    "name": "Teras"
+   },
+   {
+    "id": 1465,
+    "name": "Kapalı Termal Havuz"
+   },
+   {
+    "id": 1045,
+    "name": "Deniz Kıyısı"
+   },
+   {
+    "id": 2157,
+    "name": "Kum Plaj"
+   },
+   {
+    "id": 1444,
+    "name": "Resepsiyon"
+   },
+   {
+    "id": 2156,
+    "name": "Çakıl Plaj"
+   },
+   {
+    "id": 1903,
+    "name": "Engelli Dostu"
+   },
+   {
+    "id": 1917,
+    "name": "Çocuk Dostu"
+   }
+  ],
+  "hotelTypes": [
+   {
+    "id": 1,
+    "name": "Şehir Otelleri"
+   },
+   {
+    "id": 2,
+    "name": "Tatil Otelleri"
+   }
   ]
  }
 }

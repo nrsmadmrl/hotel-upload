@@ -95,6 +95,17 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(lancora["board_category_name"], "Her Şey Dahil")
         self.assertTrue(lancora["analysis_eligible"])
 
+    def test_facilities_become_named_columns(self):
+        lancora = next(f for f in self.facts.values() if f["hotel_name"] == "Lancora Beach Hotel")
+        self.assertEqual(lancora["hotel_type_name"], "Tatil Otelleri")
+        self.assertIn("Havuz", lancora["facilities"].split(";"))
+        self.assertTrue(lancora["has_pool"])
+        self.assertEqual({k for k in obilet.FACILITY_FLAGS} - set(lancora), set())
+
+    def test_no_discount_column_when_the_price_is_not_reduced(self):
+        lancora = next(r for r in self.rows if r["hotel_name"] == "Lancora Beach Hotel")
+        self.assertIsNone(lancora["price_before_discount_minor"])
+
     def test_unavailable_hotels_are_kept_without_price(self):
         un = [r for r in self.rows if r["availability_status"] == "unavailable"]
         self.assertTrue(un)

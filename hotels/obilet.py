@@ -52,12 +52,26 @@ SITE = "https://www.obilet.com"
 OFFER_FIELDS = """schema_version query_id collection_date observed_at region_id
 hotel_id stay_kind check_in_date check_out_date nights lead_days search_adults
 search_children search_rooms availability_status currency price_total_minor price_per_night_minor
-price_scope board_category_id board_category_name board_name is_refundable supplier
+price_scope price_before_discount_minor discount_ratio board_category_id board_category_name
+board_name is_refundable supplier
 accommodation_tax_included response_cached response_expires_at analysis_eligible source""".split()
 
 HOTEL_FIELDS = """region_id hotel_id hotel_name stars average_score comment_count hotel_type_id
-latitude longitude distance_to_region_center_km obilet_center_name obilet_center_distance_km
-photo_url seen_available seen_unavailable source""".split()
+hotel_type_name has_pool has_parking has_wifi is_beachfront is_child_friendly is_pet_friendly
+is_accessible facilities latitude longitude distance_to_region_center_km obilet_center_name
+obilet_center_distance_km photo_url seen_available seen_unavailable source""".split()
+
+# obilet facility names (data.hotelFacilities) -> yes/no columns. A hotel without the
+# facility listed is "false" only in the sense "obilet lists none"; not verified absent.
+FACILITY_FLAGS = dict(
+    has_pool=("Havuz", "Isıtmalı Havuz", "Isıtmalı Açık Havuz", "Kapalı Termal Havuz", "Özel Havuz"),
+    has_parking=("Otopark",),
+    has_wifi=("Wi-Fi",),
+    is_beachfront=("Deniz Kıyısı", "Plaj", "Özel Plaj", "Kum Plaj", "Çakıl Plaj", "Beach"),
+    is_child_friendly=("Çocuk Dostu", "Çocuk Havuzu"),
+    is_pet_friendly=("Evcil Hayvan Dostu",),
+    is_accessible=("Engelli Dostu",),
+)
 
 QUERY_FIELDS = """collection_date query_id region_id stay_kind check_in_date check_out_date nights
 search_adults query_state http_status seconds hotels_total hotels_in_radius available_in_radius
@@ -190,7 +204,11 @@ def to_minor(amount):
     return value if value > 0 else None
 
 
-def hotel_facts(h, region):
+def hotel_facts(h, region, catalog=None):
+    """catalog: {"facilities": {id: name}, "types": {id: name}} from the same response."""
+    catalog = catalog or {}
+    names = sorted({catalog.get("facilities", {}).get(i) for i in (h.get("facilityIds") or [])} - {None})
+    flags = {k: any(n in names for n in v) for k, v in FACILITY_FLAGS.items()} if "facilityIds" in h else {}
     geo = h.get("geoLocation") or {}
     lat, lon = geo.get("latitude"), geo.get("longitude")
     c = region["center"]
@@ -199,7 +217,10 @@ def hotel_facts(h, region):
     near = h.get("nearestCityCenter") or {}
     return dict(region_id=region["region_id"], hotel_id=str(h.get("id")), hotel_name=h.get("name"),
                 stars=h.get("stars"), average_score=h.get("averageScore"), comment_count=h.get("commentCount"),
-                hotel_type_id=h.get("hotelTypeId"), latitude=lat, longitude=lon,
+                hotel_type_id=h.get("hotelTypeId"),
+                hotel_type_name=catalog.get("types", {}).get(h.get("hotelTypeId")),
+                facilities=";".join(names) if "facilityIds" in h else None, **flags,
+                latitude=lat, longitude=lon,
                 distance_to_region_center_km=dist, obilet_center_name=near.get("locationName"),
                 obilet_center_distance_km=near.get("distanceKm"), photo_url=h.get("photoUrl"), source="obilet")
 
@@ -217,6 +238,8 @@ def parse_response(data, region, stay, rooms, day, observed_at):
     cached = d.get("isCachedResponse")
     expires = d.get("searchExpireOn")
     rows, facts_by_id = [], {}
+    catalog = dict(facilities={x.get("id"): x.get("name") for x in d.get("hotelFacilities") or []},
+                   types={x.get("id"): x.get("name") for x in d.get("hotelTypes") or []})
     stats = dict(hotels_total=0, hotels_in_radius=0, available_in_radius=0, unavailable_in_radius=0)
 
     def base(f, status):
@@ -232,7 +255,7 @@ def parse_response(data, region, stay, rooms, day, observed_at):
 
     for h in d.get("searchHotel") or []:
         stats["hotels_total"] += 1
-        f = hotel_facts(h, region)
+        f = hotel_facts(h, region, catalog)
         if not in_radius(f, region):
             continue
         stats["hotels_in_radius"] += 1
@@ -250,6 +273,10 @@ def parse_response(data, region, stay, rooms, day, observed_at):
             price_total_minor=total,
             price_per_night_minor=round(total / stay["nights"]) if total else None,
             price_scope="stay_total_one_room_all_guests",
+            # strike-through price shown by the site; only when it is really higher
+            price_before_discount_minor=(to_minor(price.get("fakeAmount"))
+                                         if total and (to_minor(price.get("fakeAmount")) or 0) > total else None),
+            discount_ratio=price.get("discountRatio") if price.get("discountRatio") else None,
             board_category_id=board.get("boardCategoryId"), board_category_name=board.get("boardCategoryName"),
             board_name=board.get("name"), is_refundable=o.get("isRefundable"),
             supplier=(o.get("supplier") or {}).get("name"),
@@ -263,7 +290,7 @@ def parse_response(data, region, stay, rooms, day, observed_at):
             stats["available_in_radius"] += 1
 
     for h in d.get("unavailableSearchHotel") or []:
-        f = hotel_facts(h, region)
+        f = hotel_facts(h, region, catalog)
         if not in_radius(f, region):
             continue
         stats["unavailable_in_radius"] += 1

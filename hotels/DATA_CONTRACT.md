@@ -54,6 +54,8 @@ The flight window (departures on the next 30 days, as the flight collector):
 - `board_category_id`, `board_category_name`, `board_name`: meal plan of the offer
   (`Sadece Oda`, `Kahvaltı Dahil`, `Yarım Pansiyon`, `Her Şey Dahil`, ...). The cheapest offer
   is shown, so the meal plan of one hotel can change between dates.
+- `price_before_discount_minor`, `discount_ratio`: the site's strike-through price and its
+  discount, only when the shown price is really reduced; blank otherwise.
 - `is_refundable`, `supplier` (selling agency), `accommodation_tax_included` (as reported).
 - `response_cached`, `response_expires_at`: obilet served a cached search; prices may be up
   to that cache's age.
@@ -63,7 +65,10 @@ The flight window (departures on the next 30 days, as the flight collector):
 ## hotels.csv
 
 `hotel_id`, `hotel_name`, `stars` (0 = no star class), `average_score` (0-10),
-`comment_count`, `hotel_type_id`, `latitude`, `longitude`, `distance_to_region_center_km`,
+`comment_count`, `hotel_type_id`, `hotel_type_name` (`Şehir Otelleri` / `Tatil Otelleri`),
+`facilities` (obilet's facility names, `;`-separated), `has_pool`, `has_parking`, `has_wifi`,
+`is_beachfront`, `is_child_friendly`, `is_pet_friendly`, `is_accessible` (from those names;
+`false` means obilet lists none, not a verified absence), `latitude`, `longitude`, `distance_to_region_center_km`,
 `obilet_center_name`, `obilet_center_distance_km`, `photo_url` (obilet's image; do not
 re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
 
