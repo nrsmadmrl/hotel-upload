@@ -5,8 +5,9 @@ name: hotel-collect
 # Cron is UTC: 00:17 UTC = 03:17 Europe/Istanbul, on Tuesday and Friday. GitHub may start
 # scheduled runs late; the minute is off the hour because on-the-hour runs queue longest.
 on:
-  schedule:
-    - cron: "17 0 * * 2,5"
+  # Schedule paused until the reduced query plan is approved (2026-10-28).
+  # schedule:
+  #   - cron: "17 0 * * 2,5"
   workflow_dispatch:
     inputs:
       region:
