@@ -308,7 +308,9 @@ class CycleTests(unittest.TestCase):
         self.assertTrue(any("/20261029-20261030/1ad?locationLevel=5" in u for u in visited))
 
     def _resume(self, mode):
+        import os
         import types
+        os.environ.pop("GITHUB_ACTIONS", None)  # keep test runs out of the Actions summary
         with tempfile.TemporaryDirectory() as out:
             cfg_path = Path(out) / "cfg.json"
             cfg_path.write_text(json.dumps({**self.CFG, "request_mode": mode}), encoding="utf-8")
