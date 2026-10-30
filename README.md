@@ -7,9 +7,11 @@ repository does not run collectors or store datasets; this repository does.
 ## How it works
 
 - **Source:** obilet, the same site the flight collector
-  ([mertkiyar/rotelio-collector](https://github.com/mertkiyar/rotelio-collector)) uses. A
-  browser page gives the site's cookies; each price query is sent from inside that page and
-  returns every hotel of the obilet location, so nothing is chosen or frozen in advance.
+  ([mertkiyar/rotelio-collector](https://github.com/mertkiyar/rotelio-collector)) uses. Like
+  that collector, each query opens the real results page in a browser, as a visitor would,
+  and keeps the hotel list the page itself loads. One page lists every hotel of the obilet
+  location, so nothing is chosen or frozen in advance. (`request_mode: "fetch"` instead calls
+  the list from one open page; it was refused by obilet after a few dozen queries.)
 - **Regions:** the eight pilot regions of the flight data, same `region_id`s. Each has a
   centre and a radius in `hotels/obilet_regions.json`; only hotels inside it are kept.
 - **Dates:** the flight window, i.e. departures on the next 30 days. A one-night stay for
@@ -23,9 +25,9 @@ repository does not run collectors or store datasets; this repository does.
   queries and the next night continues where it stopped. Queries are ordered by date across
   all regions (tomorrow for every region first), so a short night still covers every region's
   nearest dates. Check-ins that pass before they are reached are recorded as expired.
-- **Pace:** as the flight collector: at least 30 s between queries, a fresh browser session
-  every 8 minutes (obilet's session stops answering after about 10). A refusal (HTTP
-  403/429) ends that night's run; progress is kept and nothing retries around it.
+- **Pace:** as the flight collector: at least 30 s between queries, one browser session per
+  run. A refusal (HTTP 401/403/429 or a human-verification page) ends that night's run;
+  progress is kept and nothing retries around it.
 - **Storage:** results go to a separate **private** data repository; this repository is
   public and holds code only. No Actions artifacts are uploaded.
 - **Tiers:** `hotels/segments.py` turns a run into Economy / Standard / Premium hotels for

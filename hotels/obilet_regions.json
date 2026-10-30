@@ -77,7 +77,9 @@
     ]
   },
   "gap_seconds": 30,
-  "session_minutes": 8,
+  "request_mode": "navigate",
+  "page_timeout_seconds": 45,
+  "session_minutes": 0,
   "seconds_between_sessions": 60,
   "max_consecutive_failures": 3,
   "cycle_weekdays": [1, 4],

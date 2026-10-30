@@ -193,7 +193,7 @@ class SegmentTests(unittest.TestCase):
 class FakeSite:
     """Answers like obilet for any dates, refuses (403) after `allow` queries."""
     def __init__(self, allow):
-        self.allow, self.calls = allow, 0
+        self.allow, self.calls, self.pages = allow, 0, []
 
     def answer(self, path):
         self.calls += 1
@@ -206,17 +206,46 @@ class FakeSite:
         return dict(status=200, ms=500, text=json.dumps(d))
 
 
-class FakePage:
-    def __init__(self, site):
-        self.site = site
+class FakeResponse:
+    def __init__(self, url, status, text=""):
+        self.url, self.status, self._text = url, status, text
 
-    def goto(self, *a, **k):
-        pass
+    def text(self):
+        return self._text
+
+
+class FakePage:
+    """navigate mode: goto() a results page -> the page's own hotel-list request is answered
+    (or the page itself is refused). fetch mode: evaluate() answers the list directly."""
+    def __init__(self, site):
+        self.site, self.listeners, self.visited = site, [], []
+
+    def on(self, event, cb):
+        self.listeners.append(cb)
+
+    def remove_listener(self, event, cb):
+        self.listeners.remove(cb)
+
+    def goto(self, url, **k):
+        self.visited.append(url)
+        if "/oteller/" not in url or "ad?" not in url or not self.listeners:
+            return FakeResponse(url, 200)                             # fetch mode's cookie page
+        parts = url.split("/oteller/")[1].split("?")[0].split("/")   # slug, dates, Nad
+        ext = parts[0].split("-")[-2]
+        api = f"/json/oteller/{ext}/{parts[1]}/{parts[2]}/2"
+        res = self.site.answer(api)
+        if res["status"] != 200:
+            return FakeResponse(url, res["status"])                   # the page itself is refused
+        for cb in list(self.listeners):
+            cb(FakeResponse("https://www.obilet.com" + api, 200, res["text"]))
+        return FakeResponse(url, 200)
 
     def wait_for_timeout(self, *a):
         pass
 
-    def evaluate(self, js, args):
+    def evaluate(self, js, args=None):
+        if args is None:
+            return ""                                                  # page text: no block message
         return self.site.answer(args[0])
 
 
@@ -226,7 +255,9 @@ class FakePlaywright:
 
         class Ctx:
             def new_page(self):
-                return FakePage(site_)
+                page = FakePage(site_)
+                site_.pages.append(page)
+                return page
 
             def close(self):
                 pass
@@ -266,10 +297,21 @@ class CycleTests(unittest.TestCase):
         self.assertEqual(jobs[-1][1]["kind"], "validation")
 
     def test_refusal_stops_the_run_and_the_next_run_resumes(self):
+        for mode in ("navigate", "fetch"):
+            with self.subTest(mode=mode):
+                self._resume(mode)
+
+    def test_navigate_mode_opens_each_regions_own_results_page(self):
+        site = self._resume("navigate")
+        visited = [u for p in site.pages for u in p.visited]
+        self.assertTrue(all("kemer-609-60689_23501_125560-2/" in u for u in visited))
+        self.assertTrue(any("/20261029-20261030/1ad?locationLevel=5" in u for u in visited))
+
+    def _resume(self, mode):
         import types
         with tempfile.TemporaryDirectory() as out:
             cfg_path = Path(out) / "cfg.json"
-            cfg_path.write_text(json.dumps(self.CFG), encoding="utf-8")
+            cfg_path.write_text(json.dumps({**self.CFG, "request_mode": mode}), encoding="utf-8")
             fake_module = types.ModuleType("playwright.sync_api")
             site = FakeSite(allow=3)
 
@@ -303,6 +345,7 @@ class CycleTests(unittest.TestCase):
                 calls = site.calls
                 self.assertEqual(obilet.main(args), 0)                 # complete: nothing is sent
                 self.assertEqual(site.calls, calls)
+                return site
             finally:
                 if old is not None:
                     sys.modules["playwright.sync_api"] = old

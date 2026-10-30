@@ -168,17 +168,39 @@ def api_path(region, stay):
     return f"/json/oteller/{loc['externalId']}/{date_range(stay)}/{stay['adults']}ad/{loc['type']}"
 
 
-COOKIE_SLUG = "kemer-609-60689_23501_125560-2"  # any results page gives the site's cookies
+COOKIE_SLUG = "kemer-609-60689_23501_125560-2"  # a results page known to work
+TR_ASCII = str.maketrans("çğıöşüÇĞİÖŞÜâîû", "cgiosuCGIOSUaiu")
+
+
+def slugify(text):
+    text = (text or "").translate(TR_ASCII).lower()
+    out, dash = [], False
+    for ch in text:
+        if ch.isascii() and ch.isalnum():
+            out.append(ch)
+            dash = False
+        elif not dash:
+            out.append("-")
+            dash = True
+    return "".join(out).strip("-")
+
+
+def region_slug(region):
+    """The site's results-page path for a location: <name>-<id>-<externalId>-<type>,
+    e.g. kemer-609-60689_23501_125560-2."""
+    if region.get("slug"):
+        return region["slug"]
+    loc = region.get("location") or {}
+    if not loc.get("externalId"):
+        return COOKIE_SLUG
+    return f"{slugify(loc.get('name'))}-{loc['id']}-{loc['externalId']}-{loc.get('type', '2')}"
 
 
 def page_url(region, stay):
-    """Results page opened once per region, only to get the site's cookies. The price
-    queries name their own location in the request body, so a region without a known
-    page slug falls back to a page that is known to work."""
-    loc = region["location"]
-    slug = region.get("slug") or COOKIE_SLUG
-    level = loc.get("level", 5) if region.get("slug") else 5
-    return f"{SITE}/oteller/{slug}/{date_range(stay)}/{stay['adults']}ad?locationLevel={level}"
+    """The results page a visitor sees for this location, dates and adult count."""
+    loc = region.get("location") or {}
+    level = loc.get("level", 5) if loc.get("externalId") else 5
+    return f"{SITE}/oteller/{region_slug(region)}/{date_range(stay)}/{stay['adults']}ad?locationLevel={level}"
 
 
 def request_body(region):
@@ -465,14 +487,61 @@ def save_region(folder, cfg, region, cycle_day, day, offers, facts, queries, run
 BLOCK_STATUS = (401, 403, 429)
 
 
+BLOCK_TEXT = ("verify you are human", "access denied", "unusual traffic", "erişiminiz engellendi",
+              "captcha doğrulama", "too many requests")
+
+
+def navigate_and_capture(page, region, stay, timeout_s=45):
+    """Open the results page like a visitor and read the hotel-list response the page itself
+    requests. Returns {"status", "ms", "text"} like the fetch mode. A refused page (HTTP
+    401/403/429 or a human-verification text) is reported as status 403."""
+    want = f"/json/oteller/{region['location']['externalId']}/{date_range(stay)}/{stay['adults']}ad"
+    got = {}
+
+    def on_response(resp):
+        if got or want not in resp.url:
+            return
+        try:
+            got.update(status=resp.status, text=resp.text())
+        except Exception as error:
+            got.update(status=None, text=f"{type(error).__name__}: {error}")
+
+    t0 = time.monotonic()
+    page.on("response", on_response)
+    try:
+        doc = page.goto(page_url(region, stay), wait_until="domcontentloaded", timeout=60000)
+        if doc is not None and doc.status in BLOCK_STATUS:
+            return dict(status=doc.status, ms=(time.monotonic() - t0) * 1000, text=f"page HTTP {doc.status}")
+        while not got and time.monotonic() - t0 < timeout_s:
+            page.wait_for_timeout(500)
+        if not got:
+            body = ""
+            try:
+                body = (page.evaluate("() => document.body ? document.body.innerText.slice(0, 4000) : ''") or "").lower()
+            except Exception:
+                pass
+            if any(t in body for t in BLOCK_TEXT):
+                return dict(status=403, ms=(time.monotonic() - t0) * 1000, text="human verification / access denied page")
+            return dict(status=None, ms=(time.monotonic() - t0) * 1000,
+                        text="the page did not request the hotel list in time")
+        return dict(status=got["status"], ms=(time.monotonic() - t0) * 1000, text=got["text"])
+    except Exception as error:
+        return dict(status=None, ms=(time.monotonic() - t0) * 1000, text=f"{type(error).__name__}: {error}")
+    finally:
+        page.remove_listener("response", on_response)
+
+
 def run_jobs(p, cfg, jobs, day, cycle_day, args):
-    """Send the queries one by one in ONE browser session chain shared by all regions.
+    """Send the queries one by one in one browser session shared by all regions. Default
+    mode "navigate" opens each results page like a visitor (as the flight collector does)
+    and reads the hotel list the page requests; "fetch" calls the list from one open page.
     Returns (results by region_id, exit code). Any refusal ends the run (saved, resumed by
     the next run); there is no retry around it."""
     rooms = cfg.get("rooms", 1)
     gap = cfg.get("gap_seconds", 30)
     max_fail = cfg.get("max_consecutive_failures", 3)
-    session_seconds = cfg.get("session_minutes", 8) * 60
+    mode = cfg.get("request_mode", "navigate")  # navigate: open each results page like a visitor
+    session_seconds = cfg.get("session_minutes", 0) * 60  # 0 = one session for the whole run
     between = cfg.get("seconds_between_sessions", 60)
     browser = p.chromium.launch(headless=not args.headed)
     session = {}
@@ -487,8 +556,9 @@ def run_jobs(p, cfg, jobs, day, cycle_day, args):
         session["context"] = browser.new_context(locale="tr-TR", timezone_id="Europe/Istanbul",
                                                  viewport={"width": 1366, "height": 900})
         session["page"] = session["context"].new_page()
-        session["page"].goto(page_url({"location": {}}, first_stay), wait_until="domcontentloaded", timeout=60000)
-        session["page"].wait_for_timeout(6000)
+        if mode == "fetch":  # fetch mode needs one loaded page for the site's cookies
+            session["page"].goto(page_url({"location": {}}, first_stay), wait_until="domcontentloaded", timeout=60000)
+            session["page"].wait_for_timeout(6000)
         session["started"] = time.monotonic()
         session["count"] = session.get("count", 0) + 1
 
@@ -499,7 +569,7 @@ def run_jobs(p, cfg, jobs, day, cycle_day, args):
         for i, (region, stay) in enumerate(jobs, 1):
             rid = region["region_id"]
             acc = res_by.setdefault(rid, dict(region=region, offers=[], facts={}, queries=[]))
-            if time.monotonic() - session["started"] > session_seconds:
+            if session_seconds and time.monotonic() - session["started"] > session_seconds:
                 print(f"  session {session['count']} used for {session_seconds // 60} min: new session in {between}s")
                 time.sleep(between)
                 open_session()
@@ -510,10 +580,13 @@ def run_jobs(p, cfg, jobs, day, cycle_day, args):
                      stay_kind=stay["kind"], check_in_date=stay["check_in_date"],
                      check_out_date=stay["check_out_date"], nights=stay["nights"],
                      search_adults=stay["adults"], observed_at=observed_at)
-            try:
-                res = session["page"].evaluate(FETCH_JS, [api_path(region, stay), request_body(region)])
-            except Exception as error:  # page crashed or navigated away
-                res = dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
+            if mode == "navigate":
+                res = navigate_and_capture(session["page"], region, stay, cfg.get("page_timeout_seconds", 45))
+            else:
+                try:
+                    res = session["page"].evaluate(FETCH_JS, [api_path(region, stay), request_body(region)])
+                except Exception as error:  # page crashed or navigated away
+                    res = dict(status=None, ms=0, text=f"{type(error).__name__}: {error}")
             q.update(http_status=res["status"], seconds=round(res["ms"] / 1000, 1))
             state, data = None, None
             if res["status"] == 200:
