@@ -95,6 +95,7 @@ HOTEL_COLUMNS = [
     ("Evcil hayvan dostu", "is_pet_friendly"), ("Engelli dostu", "is_accessible"),
     ("Tüm özellikler", "facilities"), ("Merkeze uzaklık (km)", "distance_to_region_center_km"),
     ("Enlem", "latitude"), ("Boylam", "longitude"), ("Fotoğraf", "photo_url"),
+    ("Galeri fotoğrafları", "photo_urls"),
     ("Müsait görüldüğü sorgu", "seen_available"), ("Müsait değil görüldüğü sorgu", "seen_unavailable"),
 ]
 
@@ -108,8 +109,8 @@ def cell(field, value):
         return STATUS.get(value, value or None)
     if field == "stay_kind":
         return KIND.get(value, value or None)
-    if field == "facilities":
-        return (value or "").replace(";", ", ") or None
+    if field in ("facilities", "photo_urls"):
+        return (value or "").replace(";", ", " if field == "facilities" else "\n") or None
     if field in NUMBER:
         return num(value, NUMBER[field])
     if field in ("seen_available", "seen_unavailable"):

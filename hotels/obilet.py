@@ -64,7 +64,7 @@ accommodation_tax_included response_cached response_expires_at analysis_eligible
 HOTEL_FIELDS = """region_id hotel_id hotel_name stars average_score comment_count hotel_type_id
 hotel_type_name has_pool has_parking has_wifi is_beachfront is_child_friendly is_pet_friendly
 is_accessible facilities latitude longitude distance_to_region_center_km obilet_center_name
-obilet_center_distance_km photo_url seen_available seen_unavailable source""".split()
+obilet_center_distance_km photo_url photo_urls seen_available seen_unavailable source""".split()
 
 # obilet facility names (data.hotelFacilities) -> yes/no columns. A hotel without the
 # facility listed is "false" only in the sense "obilet lists none"; not verified absent.
@@ -249,7 +249,10 @@ def hotel_facts(h, region, catalog=None):
                 facilities=";".join(names) if "facilityIds" in h else None, **flags,
                 latitude=lat, longitude=lon,
                 distance_to_region_center_km=dist, obilet_center_name=near.get("locationName"),
-                obilet_center_distance_km=near.get("distanceKm"), photo_url=h.get("photoUrl"), source="obilet")
+                obilet_center_distance_km=near.get("distanceKm"), photo_url=h.get("photoUrl"),
+                # the gallery obilet shows (up to 5 images); ";"-separated
+                photo_urls=";".join(u for u in (h.get("mediaFiles") or []) if isinstance(u, str)) or None,
+                source="obilet")
 
 
 def in_radius(facts, region):

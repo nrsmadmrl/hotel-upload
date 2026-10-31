@@ -75,8 +75,9 @@ The flight window (departures on the next 30 days, as the flight collector):
 `facilities` (obilet's facility names, `;`-separated), `has_pool`, `has_parking`, `has_wifi`,
 `is_beachfront`, `is_child_friendly`, `is_pet_friendly`, `is_accessible` (from those names;
 `false` means obilet lists none, not a verified absence), `latitude`, `longitude`, `distance_to_region_center_km`,
-`obilet_center_name`, `obilet_center_distance_km`, `photo_url` (obilet's image; do not
-re-host), `seen_available` / `seen_unavailable` (number of queries in this run).
+`obilet_center_name`, `obilet_center_distance_km`, `photo_url` (obilet's main image) and
+`photo_urls` (its gallery, up to 5, `;`-separated); images belong to obilet/the hotel: link,
+do not re-host, `seen_available` / `seen_unavailable` (number of queries in this run).
 
 ## queries.csv
 

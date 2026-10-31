@@ -100,6 +100,8 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(lancora["hotel_type_name"], "Tatil Otelleri")
         self.assertIn("Havuz", lancora["facilities"].split(";"))
         self.assertTrue(lancora["has_pool"])
+        self.assertGreaterEqual(len(lancora["photo_urls"].split(";")), 2)
+        self.assertTrue(lancora["photo_url"].startswith("https://"))
         self.assertEqual({k for k in obilet.FACILITY_FLAGS} - set(lancora), set())
 
     def test_no_discount_column_when_the_price_is_not_reduced(self):
